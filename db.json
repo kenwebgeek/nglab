@@ -87,6 +87,14 @@
       "email": "boss@avengers.com",
       "currentActivity": "Doing spy stuff",
       "id": 11
+    },
+    {
+      "firstName": "James",
+      "lastName": "Howlett",
+      "nickname": "Wolverine",
+      "email": "logan@xmen.com",
+      "currentActivity": "Slicing and dicing",
+      "id": 12
     }
   ]
 }
