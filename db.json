@@ -55,6 +55,14 @@
       "email": "scarletWitch@avengers.com",
       "currentActivity": "Messing with minds!",
       "id": 7
+    },
+    {
+      "firstName": "Clint",
+      "lastName": "Barton",
+      "nickname": "Hawkeye",
+      "email": "theHawk@avengers.com",
+      "currentActivity": "Being a badass",
+      "id": 8
     }
   ]
 }
