@@ -8,8 +8,9 @@ import { selectUser } from '../../state/user.selectors';
 import { UserActions } from '../../state/user.actions';
 
 @Component({
-  selector: 'app-form',
-  templateUrl: './form.component.html'
+    selector: 'app-form',
+    templateUrl: './form.component.html',
+    standalone: false
 })
 export class FormComponent implements OnInit {
   user$: Observable<User | undefined>;

@@ -9,8 +9,9 @@ import { ViewActions } from '../../enums/view-actions.enum';
 import { AppState } from 'src/app/state/app.state';
 
 @Component({
-  selector: 'app-list',
-  templateUrl: './list.component.html'
+    selector: 'app-list',
+    templateUrl: './list.component.html',
+    standalone: false
 })
 export class ListComponent implements OnInit {
   // Select users slice of state

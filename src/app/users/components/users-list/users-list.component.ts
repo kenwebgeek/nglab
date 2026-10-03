@@ -4,8 +4,9 @@ import { CommonService } from 'src/app/shared/common.service';
 import { ViewActions } from '../../enums/view-actions.enum';
 
 @Component({
-  selector: 'app-users-list',
-  templateUrl: './users-list.component.html'
+    selector: 'app-users-list',
+    templateUrl: './users-list.component.html',
+    standalone: false
 })
 export class UsersListComponent implements OnInit {
   @Input() headers: Array<{ headerName: string, fieldName: keyof User }> = [];

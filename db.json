@@ -63,6 +63,14 @@
       "email": "theHawk@avengers.com",
       "currentActivity": "Being a badass",
       "id": 8
+    },
+    {
+      "firstName": "Peter",
+      "lastName": "Parker",
+      "nickname": "Spider-man",
+      "email": "spidey@yourneighborhood.com",
+      "currentActivity": "Swinging from buildings",
+      "id": 9
     }
   ]
 }

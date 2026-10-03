@@ -1,8 +1,9 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html',
+    selector: 'app-header',
+    templateUrl: './header.component.html',
+    standalone: false
 })
 export class HeaderComponent {
   @Output() colorMode = new EventEmitter<string>();

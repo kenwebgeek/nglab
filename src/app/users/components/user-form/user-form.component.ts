@@ -3,8 +3,9 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { User } from '../../models/user.interface';
 
 @Component({
-  selector: 'app-user-form',
-  templateUrl: './user-form.component.html'
+    selector: 'app-user-form',
+    templateUrl: './user-form.component.html',
+    standalone: false
 })
 export class UserFormComponent implements OnInit {
   @Input() selectedUser: User | null = null;
