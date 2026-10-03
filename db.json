@@ -67,10 +67,18 @@
     {
       "firstName": "Peter",
       "lastName": "Parker",
-      "nickname": "Spider-man",
+      "nickname": "Spider-Man",
       "email": "spidey@yourneighborhood.com",
       "currentActivity": "Swinging from buildings",
       "id": 9
+    },
+    {
+      "firstName": "Scott",
+      "lastName": "Lang",
+      "nickname": "Ant-Man",
+      "email": "bigorsmall@avengers.com",
+      "currentActivity": "Discovering new dimensions!",
+      "id": 10
     }
   ]
 }
