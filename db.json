@@ -79,6 +79,14 @@
       "email": "bigorsmall@avengers.com",
       "currentActivity": "Discovering new dimensions!",
       "id": 10
+    },
+    {
+      "firstName": "Nick",
+      "lastName": "Fury",
+      "nickname": "",
+      "email": "boss@avengers.com",
+      "currentActivity": "Doing spy stuff",
+      "id": 11
     }
   ]
 }
