@@ -39,6 +39,14 @@
       "email": "capcicle@avengers.com",
       "currentActivity": "Catching up",
       "id": 5
+    },
+    {
+      "firstName": "Victor",
+      "lastName": "von Doom",
+      "nickname": "Dr. Doom",
+      "email": "dr.doom@doominc.com",
+      "currentActivity": "Fighting the Avengers!",
+      "id": 6
     }
   ]
 }
