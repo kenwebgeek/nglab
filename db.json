@@ -47,6 +47,14 @@
       "email": "dr.doom@doominc.com",
       "currentActivity": "Fighting the Avengers!",
       "id": 6
+    },
+    {
+      "firstName": "Wanda",
+      "lastName": "Maximoff",
+      "nickname": "Scarlet Witch",
+      "email": "scarletWitch@avengers.com",
+      "currentActivity": "Messing with minds!",
+      "id": 7
     }
   ]
 }

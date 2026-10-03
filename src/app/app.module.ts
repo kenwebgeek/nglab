@@ -24,7 +24,7 @@ import { HeaderComponent } from './shared/header/header.component';
     BrowserAnimationsModule,
     StoreModule.forRoot({}, {}),
     EffectsModule.forRoot([]),
-    StoreDevtoolsModule.instrument({ maxAge: 25, logOnly: !isDevMode() }),
+    StoreDevtoolsModule.instrument({ maxAge: 25, logOnly: !isDevMode() , connectInZone: true}),
   ],
   providers: [],
   bootstrap: [AppComponent],
