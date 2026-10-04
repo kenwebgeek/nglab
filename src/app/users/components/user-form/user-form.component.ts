@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { User } from '../../models/user.interface';
 import { MatCard } from '@angular/material/card';
@@ -14,7 +14,7 @@ import { MatButton } from '@angular/material/button';
     templateUrl: './user-form.component.html',
     imports: [MatCard, RouterLink, MatIcon, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatButton]
 })
-export class UserFormComponent implements OnInit {
+export class UserFormComponent implements OnChanges {
   @Input() selectedUser: User | null = null;
   @Input() actionButtonLabel: string = 'Create';
   @Output() action = new EventEmitter();
@@ -41,8 +41,11 @@ export class UserFormComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.checkAction();
+  // The selected user can arrive after the form is created (e.g. a direct visit while users load)
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedUser']) {
+      this.checkAction();
+    }
   }
 
   checkAction() {
