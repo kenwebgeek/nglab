@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, output } from '@angular/core';
+import { Component, computed, effect, input, output, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { User } from '../../models/user.interface';
 import { MatCard } from '@angular/material/card';
@@ -15,13 +15,15 @@ import { MatButton } from '@angular/material/button';
     imports: [MatCard, RouterLink, MatIcon, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatButton]
 })
 export class UserFormComponent {
+  private readonly fb = inject(FormBuilder);
+
   readonly selectedUser = input<User | null>(null);
   readonly action = output<{ value: User, action: string }>();
   readonly actionButtonLabel = computed(() => this.selectedUser() ? 'Update' : 'Create');
 
   userForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor() {
     this.userForm = this.fb.group({
       firstName: ['', [
         Validators.required,

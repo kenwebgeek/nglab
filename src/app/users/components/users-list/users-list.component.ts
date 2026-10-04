@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, inject } from '@angular/core';
 import { User } from '../../models/user.interface';
 import { CommonService } from 'src/app/shared/common.service';
 import { ViewActions } from '../../enums/view-actions.enum';
@@ -13,6 +13,8 @@ import { MatIcon } from '@angular/material/icon';
     imports: [MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatButton, MatIcon, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow]
 })
 export class UsersListComponent {
+  private readonly commonService = inject(CommonService);
+
   readonly headers = input<Array<{ headerName: string, fieldName: keyof User }>>([]);
   readonly users = input<ReadonlyArray<User>>([]);
   readonly user = output<{ user: User, action: ViewActions }>();
@@ -23,8 +25,6 @@ export class UsersListComponent {
 
   isLoading = false;
   shouldShowAlert = false;
-
-  constructor(private commonService: CommonService) { }
 
   reloadPage() {
     window.location.reload();

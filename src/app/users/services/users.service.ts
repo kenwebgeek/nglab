@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { User } from '../models/user.interface';
 import { Observable, catchError, tap, throwError } from 'rxjs';
@@ -7,9 +7,9 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
   providedIn: 'root',
 })
 export class UsersService {
-  baseApi = 'http://localhost:3000';
+  private readonly http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  baseApi = 'http://localhost:3000';
 
   // POST data
   addUser(user: User) {

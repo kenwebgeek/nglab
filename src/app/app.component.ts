@@ -11,8 +11,6 @@ export class AppComponent {
   title = 'Angular Lab';
   colorMode = '';
 
-  constructor() {}
-
   setColorMode(mode: string) {
     this.colorMode = mode;
   }
