@@ -1,11 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Component, computed, inject, input } from '@angular/core';
 import { User } from '../../models/user.interface';
-import { AppState } from 'src/app/state/app.state';
-import { selectUser } from '../../state/user.selectors';
-import { UserActions } from '../../state/user.actions';
+import { UsersStore } from '../../state/users.store';
 import { UserFormComponent } from '../../components/user-form/user-form.component';
 
 @Component({
@@ -13,28 +8,25 @@ import { UserFormComponent } from '../../components/user-form/user-form.componen
     templateUrl: './form.component.html',
     imports: [UserFormComponent]
 })
-export class FormComponent implements OnInit {
-  user$: Observable<User | undefined>;
-  user: User | null = null;
+export class FormComponent {
+  private readonly store = inject(UsersStore);
 
-  constructor(private router: ActivatedRoute, private store: Store<AppState>) {
-    const id = +this.router.snapshot.params['id'];
-    this.user$ = this.store.select(selectUser(id));
-    this.user$.subscribe(data => {
-      if (data) this.user = data;
-    });
-  }
+  // Bound from the `:id` route param
+  readonly id = input<string>();
 
-  ngOnInit(): void { }
+  readonly user = computed(() => {
+    const id = Number(this.id());
+    return this.store.users().find(data => data.id === id) ?? null;
+  });
 
   formAction(data: { value: User, action: string }) {
     console.log(data);
     switch (data.action) {
       case 'Create':
-        this.store.dispatch({ type: UserActions.ADD_USER_API, payload: data.value });
+        this.store.add(data.value);
         break;
       case 'Update':
-        this.store.dispatch({ type: UserActions.MODIFY_USER_API, payload: data.value });
+        this.store.update(data.value);
         break;
       default: '';
         break;

@@ -1,12 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { skip } from 'rxjs';
 import { User } from '../../models/user.interface';
-import { UserActions } from '../../state/user.actions';
-import { selectUsers } from '../../state/user.selectors';
+import { UsersStore } from '../../state/users.store';
 import { ViewActions } from '../../enums/view-actions.enum';
-import { AppState } from 'src/app/state/app.state';
 import { UsersListComponent } from '../../components/users-list/users-list.component';
 
 @Component({
@@ -15,9 +11,10 @@ import { UsersListComponent } from '../../components/users-list/users-list.compo
     imports: [UsersListComponent]
 })
 export class ListComponent implements OnInit {
-  // Select users slice of state
-  usersData: ReadonlyArray<User> = [];
-  users$ = this.store.select(selectUsers());
+  private readonly router = inject(Router);
+  private readonly store = inject(UsersStore);
+
+  readonly users = this.store.users;
 
   headers: { headerName: string, fieldName: keyof User}[] = [
     { headerName: 'First name', fieldName: 'firstName' },
@@ -27,14 +24,8 @@ export class ListComponent implements OnInit {
     { headerName: 'Current activity', fieldName: 'currentActivity' },
   ];
 
-  constructor(
-    private router: Router,
-    private store: Store<AppState>
-  ) { }
-
   ngOnInit(): void {
-    this.store.dispatch({ type: UserActions.GET_USER_LIST });
-    this.users$.pipe(skip(1)).subscribe(data => this.usersData = data);
+    this.store.load();
   }
 
   selectUser(data: { user: User, action: ViewActions }) {
@@ -45,7 +36,7 @@ export class ListComponent implements OnInit {
         return;
       }
       case ViewActions.Delete: {
-        this.store.dispatch({ type: UserActions.REMOVE_USER_API, payload: data.user.id });
+        this.store.remove(data.user.id);
         return;
       }
       default: ''
