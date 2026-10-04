@@ -1,5 +1,7 @@
 # Plan: remove NgModules and replace NgRx with Angular signals
 
+**Status: all phases complete.** Also removed in Phase 3: `@angular/animations` and `@angular/platform-browser-dynamic`, which were no longer used.
+
 ## Current state
 
 | Area | Today |
