@@ -81,20 +81,20 @@
       "id": 10
     },
     {
-      "firstName": "Nick",
-      "lastName": "Fury",
-      "nickname": "",
-      "email": "boss@avengers.com",
-      "currentActivity": "Doing spy stuff",
-      "id": 11
-    },
-    {
       "firstName": "James",
       "lastName": "Howlett",
       "nickname": "Wolverine",
       "email": "logan@xmen.com",
       "currentActivity": "Slicing and dicing",
       "id": 12
+    },
+    {
+      "firstName": "Reed",
+      "lastName": "Richards",
+      "nickname": "Mr. Fantastic",
+      "email": "stretchy@fantasticfour.com",
+      "currentActivity": "Stretching",
+      "id": 13
     }
   ]
 }
