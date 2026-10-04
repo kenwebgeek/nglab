@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { User } from '../../models/user.interface';
 import { CommonService } from 'src/app/shared/common.service';
 import { ViewActions } from '../../enums/view-actions.enum';
@@ -12,11 +12,11 @@ import { MatIcon } from '@angular/material/icon';
     templateUrl: './users-list.component.html',
     imports: [MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatButton, MatIcon, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow]
 })
-export class UsersListComponent implements OnInit {
-  @Input() headers: Array<{ headerName: string, fieldName: keyof User }> = [];
-  @Input() users: ReadonlyArray<User> = [];
-  @Output() user = new EventEmitter<{ user: User, action: ViewActions }>();
-  headerFields: string[] = [];
+export class UsersListComponent {
+  readonly headers = input<Array<{ headerName: string, fieldName: keyof User }>>([]);
+  readonly users = input<ReadonlyArray<User>>([]);
+  readonly user = output<{ user: User, action: ViewActions }>();
+  readonly headerFields = computed(() => [...this.headers().map(data => data.fieldName), 'actions']);
 
   alertMessage = '';
   alertType = '';
@@ -25,15 +25,6 @@ export class UsersListComponent implements OnInit {
   shouldShowAlert = false;
 
   constructor(private commonService: CommonService) { }
-
-  ngOnInit() {
-    this.getHeaderFields();
-  }
-
-  getHeaderFields() {
-    this.headerFields = this.headers.map(data => data.fieldName);
-    this.headerFields.push('actions');
-  }
 
   reloadPage() {
     window.location.reload();

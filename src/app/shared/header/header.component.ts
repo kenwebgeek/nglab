@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
@@ -10,7 +10,7 @@ import { RouterLink } from '@angular/router';
     imports: [MatToolbar, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, RouterLink]
 })
 export class HeaderComponent {
-  @Output() colorMode = new EventEmitter<string>();
+  readonly colorMode = output<string>();
   colorModeIcon = 'dark_mode';
 
   toggleColorMode(e: any) {

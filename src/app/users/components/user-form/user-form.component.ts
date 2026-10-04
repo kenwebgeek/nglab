@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, computed, effect, input, output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { User } from '../../models/user.interface';
 import { MatCard } from '@angular/material/card';
@@ -14,10 +14,10 @@ import { MatButton } from '@angular/material/button';
     templateUrl: './user-form.component.html',
     imports: [MatCard, RouterLink, MatIcon, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatButton]
 })
-export class UserFormComponent implements OnChanges {
-  @Input() selectedUser: User | null = null;
-  @Input() actionButtonLabel: string = 'Create';
-  @Output() action = new EventEmitter();
+export class UserFormComponent {
+  readonly selectedUser = input<User | null>(null);
+  readonly action = output<{ value: User, action: string }>();
+  readonly actionButtonLabel = computed(() => this.selectedUser() ? 'Update' : 'Create');
 
   userForm: FormGroup;
 
@@ -39,30 +39,18 @@ export class UserFormComponent implements OnChanges {
       currentActivity: [''],
       id: [''],
     });
-  }
 
-  // The selected user can arrive after the form is created (e.g. a direct visit while users load)
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['selectedUser']) {
-      this.checkAction();
-    }
-  }
-
-  checkAction() {
-    if (this.selectedUser) {
-      this.actionButtonLabel = 'Update';
-      this.patchDataValues();
-    }
+    // The selected user can arrive after the form is created (e.g. a direct visit while users load)
+    effect(() => {
+      const selectedUser = this.selectedUser();
+      if (selectedUser) {
+        this.userForm.patchValue(selectedUser);
+      }
+    });
   }
 
   emitAction() {
-    this.action.emit({ value: this.userForm.value, action: this.actionButtonLabel });
-  }
-
-  patchDataValues() {
-    if (this.selectedUser) {
-      this.userForm.patchValue(this.selectedUser);
-    }
+    this.action.emit({ value: this.userForm.value, action: this.actionButtonLabel() });
   }
 
   resetForm() {

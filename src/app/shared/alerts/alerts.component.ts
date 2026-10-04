@@ -1,17 +1,12 @@
-import { Component, Input, OnInit } from '@angular/core';
-
+import { Component, computed, input } from '@angular/core';
 
 @Component({
     selector: 'app-alerts',
     templateUrl: './alerts.component.html'
 })
-export class AlertsComponent implements OnInit {
-  @Input() alert: string;
-  @Input() message: string;
+export class AlertsComponent {
+  readonly alert = input<string>();
+  readonly message = input<string>();
 
-  shouldShowSuccessAlert = false;
-
-  ngOnInit() {
-    this.shouldShowSuccessAlert = this.alert === 'success';
-  }
+  readonly shouldShowSuccessAlert = computed(() => this.alert() === 'success');
 }
