@@ -6,11 +6,12 @@ import { User } from '../../models/user.interface';
 import { AppState } from 'src/app/state/app.state';
 import { selectUser } from '../../state/user.selectors';
 import { UserActions } from '../../state/user.actions';
+import { UserFormComponent } from '../../components/user-form/user-form.component';
 
 @Component({
     selector: 'app-form',
     templateUrl: './form.component.html',
-    standalone: false
+    imports: [UserFormComponent]
 })
 export class FormComponent implements OnInit {
   user$: Observable<User | undefined>;

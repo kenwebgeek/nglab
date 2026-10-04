@@ -1,9 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 
+
 @Component({
     selector: 'app-alerts',
-    templateUrl: './alerts.component.html',
-    standalone: false
+    templateUrl: './alerts.component.html'
 })
 export class AlertsComponent implements OnInit {
   @Input() alert: string;

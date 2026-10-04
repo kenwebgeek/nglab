@@ -1,20 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, RouterOutlet } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { AppComponent } from './app.component';
-import { HeaderComponent } from './shared/header/header.component';
-import { MaterialModule } from './material/material.module';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        MaterialModule,
-        RouterOutlet
-      ],
-      declarations: [
-        AppComponent,
-        HeaderComponent
-      ],
+      imports: [AppComponent],
       providers: [provideRouter([])],
     }).compileComponents();
   });
@@ -25,7 +16,7 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'ng-lab'`, () => {
+  it(`should have as title 'Angular Lab'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app.title).toEqual('Angular Lab');

@@ -7,11 +7,12 @@ import { UserActions } from '../../state/user.actions';
 import { selectUsers } from '../../state/user.selectors';
 import { ViewActions } from '../../enums/view-actions.enum';
 import { AppState } from 'src/app/state/app.state';
+import { UsersListComponent } from '../../components/users-list/users-list.component';
 
 @Component({
     selector: 'app-list',
     templateUrl: './list.component.html',
-    standalone: false
+    imports: [UsersListComponent]
 })
 export class ListComponent implements OnInit {
   // Select users slice of state

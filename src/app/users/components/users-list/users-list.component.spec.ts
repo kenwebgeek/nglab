@@ -4,7 +4,6 @@ import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
 import { UsersListComponent } from './users-list.component';
-import { MaterialModule } from '../../../material/material.module';
 
 describe('UsersListComponent', () => {
   let component: UsersListComponent;
@@ -12,8 +11,7 @@ describe('UsersListComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [ MaterialModule ],
-      declarations: [ UsersListComponent ]
+      imports: [ UsersListComponent ]
     })
     .compileComponents();
   }));

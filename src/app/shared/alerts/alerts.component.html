@@ -1,12 +1,12 @@
 <div class="absolute w-full z-10">
-  <div
-    *ngIf="shouldShowSuccessAlert; else showError"
+  @if (shouldShowSuccessAlert) {
+    <div
     class="bg-gradient-to-r from-green-300 from-10% to-emerald-300 to-90% rounded text-gray-800 text-xl
       m-4 mt-0 p-4"
-  >{{ message }}</div>
-  <ng-template #showError>
+    >{{ message }}</div>
+  } @else {
     <div
       class="bg-rose-400 rounded text-white text-xl m-4 mt-0 p-4"
     >{{ message }}</div>
-  </ng-template>
+  }
 </div>

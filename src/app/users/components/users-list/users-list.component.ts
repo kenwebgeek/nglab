@@ -2,11 +2,15 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { User } from '../../models/user.interface';
 import { CommonService } from 'src/app/shared/common.service';
 import { ViewActions } from '../../enums/view-actions.enum';
+import { MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
+
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
     selector: 'app-users-list',
     templateUrl: './users-list.component.html',
-    standalone: false
+    imports: [MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatButton, MatIcon, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow]
 })
 export class UsersListComponent implements OnInit {
   @Input() headers: Array<{ headerName: string, fieldName: keyof User }> = [];

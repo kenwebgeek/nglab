@@ -1,11 +1,18 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { User } from '../../models/user.interface';
+import { MatCard } from '@angular/material/card';
+import { RouterLink } from '@angular/router';
+import { MatIcon } from '@angular/material/icon';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+
+import { MatButton } from '@angular/material/button';
 
 @Component({
     selector: 'app-user-form',
     templateUrl: './user-form.component.html',
-    standalone: false
+    imports: [MatCard, RouterLink, MatIcon, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatButton]
 })
 export class UserFormComponent implements OnInit {
   @Input() selectedUser: User | null = null;

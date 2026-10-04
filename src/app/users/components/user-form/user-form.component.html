@@ -1,12 +1,12 @@
 <!-- <div class="absolute bg-black opacity-75 flex justify-center items-center h-screen w-screen m-0 left-0 top-0 z-20"
-  *ngIf="isLoading"
+*ngIf="isLoading"
 >
   <div class="animate-spin inline-block w-12 h-12 border-[3px] border-current border-t-transparent text-sky-600
     rounded-full dark:text-sky-500"
-    role="status"
-    aria-label="loading"
+  role="status"
+  aria-label="loading"
   ><span class="sr-only">Loading...</span>
-  </div>
+</div>
 </div>
 
 <app-alerts
@@ -25,110 +25,121 @@
       <a
         routerLink="/users"
         class="flex items-center justify-end pr-12"
-      >
+        >
         <mat-icon>
           arrow_back
         </mat-icon><span
-          class="hover:underline hover:underline-offset-4"
+        class="hover:underline hover:underline-offset-4"
         >Back to users
-        </span>
-      </a>
+      </span>
+    </a>
+  </div>
+
+  <!-- Add user form -->
+  <form class="flex flex-col mx-4 pr-8" [formGroup]="userForm">
+    <!-- Profile data -->
+    <div class="flex flex-col mb-4 w-full">
+      <!-- First name -->
+      <mat-form-field class="flex flex-col mb-4">
+        <mat-label class="mb-1">First name</mat-label>
+        <input
+          matInput
+          formControlName="firstName"
+          placeholder="Ex. John"
+          class="form-input rounded"
+          />
+
+        <!-- Error handling -->
+        @if (firstName?.invalid && (firstName?.dirty || firstName?.touched)) {
+          <mat-error>
+            @if (firstName?.errors?.['required']) {
+              <span
+                class="text-red-500 m-0 pt-2 dark:text-red-400"
+                >First name is required
+              </span>
+            }
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Last name -->
+      <mat-form-field class="flex flex-col mb-4">
+        <mat-label class="mb-1">Last name</mat-label>
+        <input matInput formControlName="lastName" class="form-input rounded"
+          placeholder="Ex. Doe"
+          />
+
+        <!-- Error handling -->
+        @if (lastName?.invalid && (lastName?.dirty || lastName?.touched)) {
+          <mat-error>
+            @if (lastName?.errors?.['required']) {
+              <span
+                class="text-red-500 m-0 pt-2 dark:text-red-400"
+                >Last name is required
+              </span>
+            }
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Nickname -->
+      <mat-form-field class="flex flex-col mb-4">
+        <mat-label class="mb-1">Nickname</mat-label>
+        <input matInput formControlName="nickname" class="form-input rounded"
+          placeholder="Ex. Johnny5"
+          />
+      </mat-form-field>
+
+      <!-- Email -->
+      <mat-form-field class="flex flex-col mb-4">
+        <mat-label class="mb-1">Email</mat-label>
+        <input matInput formControlName="email" class="form-input rounded"
+          placeholder="Ex. johnny5@example.com"
+          />
+        @if (email?.invalid && (email?.dirty || email?.touched)) {
+          <mat-error>
+            @if (email?.errors?.['required']) {
+              <span
+                class="text-red-500 m-0 pt-2">Email is required
+              </span>
+            }
+            @if (email?.errors?.['email']) {
+              <span
+                class="text-red-500 m-0 pt-2 dark:text-red-400"
+                >Email must be in "example&#64;example.com" format
+              </span>
+            }
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Current activity -->
+      <mat-form-field class="flex flex-col mb-4">
+        <mat-label class="mb-1">Current activity</mat-label>
+        <input matInput formControlName="currentActivity" class="form-input rounded"
+          placeholder="Ex. Being a killer robot!"
+          />
+      </mat-form-field>
     </div>
 
-    <!-- Add user form -->
-    <form class="flex flex-col mx-4 pr-8" [formGroup]="userForm">
-      <!-- Profile data -->
-      <div class="flex flex-col mb-4 w-full">
-        <!-- First name -->
-        <mat-form-field class="flex flex-col mb-4">
-          <mat-label class="mb-1">First name</mat-label>
-          <input
-            matInput
-            formControlName="firstName"
-            placeholder="Ex. John"
-            class="form-input rounded"
-          />
-
-          <!-- Error handling -->
-          <mat-error *ngIf="firstName?.invalid && (firstName?.dirty || firstName?.touched)">
-            <span
-              *ngIf="firstName?.errors?.['required']"
-              class="text-red-500 m-0 pt-2 dark:text-red-400"
-            >First name is required
-            </span>
-          </mat-error>
-        </mat-form-field>
-
-        <!-- Last name -->
-        <mat-form-field class="flex flex-col mb-4">
-          <mat-label class="mb-1">Last name</mat-label>
-          <input matInput formControlName="lastName" class="form-input rounded"
-            placeholder="Ex. Doe"
-          />
-
-          <!-- Error handling -->
-          <mat-error *ngIf="lastName?.invalid && (lastName?.dirty || lastName?.touched)">
-            <span
-              *ngIf="lastName?.errors?.['required']"
-              class="text-red-500 m-0 pt-2 dark:text-red-400"
-            >Last name is required
-            </span>
-          </mat-error>
-        </mat-form-field>
-
-        <!-- Nickname -->
-        <mat-form-field class="flex flex-col mb-4">
-          <mat-label class="mb-1">Nickname</mat-label>
-          <input matInput formControlName="nickname" class="form-input rounded"
-            placeholder="Ex. Johnny5"
-          />
-        </mat-form-field>
-
-        <!-- Email -->
-        <mat-form-field class="flex flex-col mb-4">
-          <mat-label class="mb-1">Email</mat-label>
-          <input matInput formControlName="email" class="form-input rounded"
-            placeholder="Ex. johnny5@example.com"
-          />
-          <mat-error *ngIf="email?.invalid && (email?.dirty || email?.touched)">
-            <span *ngIf="email?.errors?.['required']"
-              class="text-red-500 m-0 pt-2">Email is required
-            </span>
-            <span
-              *ngIf="email?.errors?.['email']"
-              class="text-red-500 m-0 pt-2 dark:text-red-400"
-            >Email must be in "example&#64;example.com" format
-            </span>
-          </mat-error>
-        </mat-form-field>
-
-        <!-- Current activity -->
-        <mat-form-field class="flex flex-col mb-4">
-          <mat-label class="mb-1">Current activity</mat-label>
-          <input matInput formControlName="currentActivity" class="form-input rounded"
-            placeholder="Ex. Being a killer robot!"
-          />
-        </mat-form-field>
-      </div>
-
-      <!-- Form actions -->
-      <div class="flex justify-end mb-4 pt-4">
-        <button
-          mat-raised-button
-          (click)="emitAction()"
-          class="bg-sky-500 text-white rounded mr-4 mt-4 h-12 w-1/4 hover:bg-sky-600"
+    <!-- Form actions -->
+    <div class="flex justify-end mb-4 pt-4">
+      <button
+        mat-raised-button
+        (click)="emitAction()"
+        class="bg-sky-500 text-white rounded mr-4 mt-4 h-12 w-1/4 hover:bg-sky-600"
         >
-          {{ actionButtonLabel }}
-        </button>
+        {{ actionButtonLabel }}
+      </button>
 
-        <button
-          mat-raised-button
-          (click)="resetForm()"
-          class="bg-white text-slate-400 rounded mt-4 h-12 w-1/4 hover:bg-slate-50"
+      <button
+        mat-raised-button
+        (click)="resetForm()"
+        class="bg-white text-slate-400 rounded mt-4 h-12 w-1/4 hover:bg-slate-50"
         >
-          Reset form
-        </button>
-      </div>
-    </form>
-  </mat-card>
+        Reset form
+      </button>
+    </div>
+  </form>
+</mat-card>
 </div>

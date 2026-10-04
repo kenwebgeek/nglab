@@ -1,4 +1,4 @@
-<div [ngClass]="colorMode === 'dark_mode' ? 'dark overflow-hidden' : 'overflow-hidden'">
+<div class="overflow-hidden" [class.dark]="colorMode === 'dark_mode'">
   <div class="bg-slate-100 dark:bg-slate-700 h-screen">
     <app-header (colorMode)="setColorMode($event)"></app-header>
     <router-outlet></router-outlet>

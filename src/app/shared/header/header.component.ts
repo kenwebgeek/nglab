@@ -1,9 +1,13 @@
 import { Component, EventEmitter, Output } from '@angular/core';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatIcon } from '@angular/material/icon';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { RouterLink } from '@angular/router';
 
 @Component({
     selector: 'app-header',
     templateUrl: './header.component.html',
-    standalone: false
+    imports: [MatToolbar, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, RouterLink]
 })
 export class HeaderComponent {
   @Output() colorMode = new EventEmitter<string>();
