@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { HeaderComponent } from './shared/header/header.component';
 import { RouterOutlet } from '@angular/router';
 
@@ -9,9 +9,9 @@ import { RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   title = 'Angular Lab';
-  colorMode = '';
+  readonly colorMode = signal('');
 
   setColorMode(mode: string) {
-    this.colorMode = mode;
+    this.colorMode.set(mode);
   }
 }

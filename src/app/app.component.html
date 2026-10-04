@@ -1,4 +1,4 @@
-<div class="overflow-x-hidden" [class.dark]="colorMode === 'dark_mode'">
+<div class="overflow-x-hidden" [class.dark]="colorMode() === 'dark_mode'">
   <div class="bg-slate-100 dark:bg-slate-700 min-h-screen">
     <app-header (colorMode)="setColorMode($event)"></app-header>
     <router-outlet></router-outlet>

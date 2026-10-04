@@ -1,4 +1,4 @@
-import { Component, output } from '@angular/core';
+import { Component, output, signal } from '@angular/core';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
@@ -11,15 +11,13 @@ import { RouterLink } from '@angular/router';
 })
 export class HeaderComponent {
   readonly colorMode = output<string>();
-  colorModeIcon = 'dark_mode';
+  readonly colorModeIcon = signal('dark_mode');
 
   toggleColorMode(e: any) {
     const { target } = e;
     const iconValue: string = target!.dataset.matIconName;
 
     this.colorMode.emit(iconValue);
-    iconValue === 'dark_mode'
-      ? this.colorModeIcon = 'light_mode'
-      : this.colorModeIcon = 'dark_mode';
+    this.colorModeIcon.set(iconValue === 'dark_mode' ? 'light_mode' : 'dark_mode');
   }
 }
