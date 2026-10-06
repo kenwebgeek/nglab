@@ -57,28 +57,12 @@
       "id": 7
     },
     {
-      "firstName": "Clint",
-      "lastName": "Barton",
-      "nickname": "Hawkeye",
-      "email": "theHawk@avengers.com",
-      "currentActivity": "Being a badass",
-      "id": 8
-    },
-    {
       "firstName": "Peter",
       "lastName": "Parker",
       "nickname": "Spider-Man",
       "email": "spidey@yourneighborhood.com",
       "currentActivity": "Swinging from buildings",
-      "id": 9
-    },
-    {
-      "firstName": "Scott",
-      "lastName": "Lang",
-      "nickname": "Ant-Man",
-      "email": "bigorsmall@avengers.com",
-      "currentActivity": "Discovering new dimensions!",
-      "id": 10
+      "id": 8
     },
     {
       "firstName": "James",
@@ -86,7 +70,7 @@
       "nickname": "Wolverine",
       "email": "logan@xmen.com",
       "currentActivity": "Slicing and dicing",
-      "id": 12
+      "id": 9
     },
     {
       "firstName": "Reed",
@@ -94,7 +78,7 @@
       "nickname": "Mr. Fantastic",
       "email": "stretchy@fantasticfour.com",
       "currentActivity": "Stretching",
-      "id": 13
+      "id": 10
     }
   ]
 }
