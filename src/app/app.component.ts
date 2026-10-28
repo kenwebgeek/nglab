@@ -1,11 +1,12 @@
 import { Component, signal } from '@angular/core';
-import { HeaderComponent } from './shared/header/header.component';
+import { BreadcrumbBarComponent } from './shared/breadcrumb-bar/breadcrumb-bar.component';
+import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
-    imports: [HeaderComponent, RouterOutlet]
+    imports: [BreadcrumbBarComponent, SidebarComponent, RouterOutlet]
 })
 export class AppComponent {
   title = 'Angular Lab';

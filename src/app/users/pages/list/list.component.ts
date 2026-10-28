@@ -17,8 +17,6 @@ export class ListComponent implements OnInit {
   readonly users = this.store.users;
 
   headers: { headerName: string, fieldName: keyof User}[] = [
-    { headerName: 'First name', fieldName: 'firstName' },
-    { headerName: 'Last name', fieldName: 'lastName' },
     { headerName: 'Nickname', fieldName: 'nickname' },
     { headerName: 'Email', fieldName: 'email' },
     { headerName: 'Current activity', fieldName: 'currentActivity' },

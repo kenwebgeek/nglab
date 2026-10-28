@@ -10,24 +10,92 @@
   </div>
 </div> -->
 
-<div class="container mx-auto p-8 sm:px-0 lg:px-4">
-  <h2 class="text-2xl text-slate-800 mb-4 px-4 dark:text-slate-50">
-    Users
-  </h2>
+<div class="px-4 pb-10 sm:px-10 font-inter [&_*]:font-inter">
+  <div class="flex items-center justify-between pb-[30px] pt-[34px]">
+    <div class="flex flex-col gap-2">
+      <h2 class="m-0 text-[30px] leading-[1.2] text-[#172033] dark:text-slate-50">
+        Users
+      </h2>
+      <p class="m-0 text-[13px] leading-normal text-[#58657a] dark:text-slate-300">
+        Manage your users, profile details, and current activity.
+      </p>
+    </div>
 
-  <section class="m-4">
+    <a
+      routerLink="/users/manage"
+      class="flex h-10 shrink-0 items-center gap-2 rounded-lg border border-solid border-[#4f46e5]
+      bg-[#4f46e5] px-4 text-[13px] font-semibold text-white no-underline hover:bg-[#4338ca]"
+    >
+      <img src="assets/icons/plus.svg" alt="" width="18" height="18" />
+      Add user
+    </a>
+  </div>
+
+  <section
+    class="overflow-hidden rounded-xl border border-solid border-[#e3e8f0] bg-white
+    dark:border-slate-600 dark:bg-slate-800"
+  >
+    <div class="flex h-20 items-center gap-[10px] px-6">
+      <h3 class="m-0 text-sm font-semibold text-[#172033] dark:text-slate-50">All users</h3>
+      <span
+        class="rounded-full bg-[#eeedff] px-2 py-[3px] text-[11px] font-semibold leading-normal
+        text-[#4338ca]"
+        >{{ users().length }}</span
+      >
+    </div>
+
+    <div class="overflow-x-auto">
     <table
       mat-table
       [dataSource]="users()"
-      class="mat-elevation-z6 dark:bg-slate-500"
-      >
+      class="w-full !bg-transparent"
+    >
+      <!-- User identity: initials avatar and full name -->
+      <ng-container matColumnDef="name">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          class="w-[230px] whitespace-nowrap border-y border-solid border-[#e3e8f0] bg-[#f8fafc] !pl-6 text-[11px] font-semibold
+          text-[#58657a] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+        >
+          Name
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let element"
+          class="border-b border-solid border-[#e3e8f0] !pl-6 dark:border-slate-600"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-[#f0f2f7]
+              text-[11px] font-semibold text-[#58657a] dark:bg-slate-600 dark:text-slate-100"
+              aria-hidden="true"
+              >{{ initials(element) }}</span
+            >
+            <span class="whitespace-nowrap text-[13px] text-[#172033] dark:text-slate-50">
+              {{ element.firstName }} {{ element.lastName }}
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
       <!-- Data for table columns -->
       @for (item of headers(); track item) {
         <ng-container [matColumnDef]="item.fieldName">
-          <th mat-header-cell *matHeaderCellDef class="dark:text-slate-50">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="whitespace-nowrap border-y border-solid border-[#e3e8f0] bg-[#f8fafc] text-[11px] font-semibold
+            text-[#58657a] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          >
             {{ item.headerName }}
           </th>
-          <td mat-cell *matCellDef="let element" class="dark:text-slate-50">
+          <td
+            mat-cell
+            *matCellDef="let element"
+            class="whitespace-nowrap border-b border-solid border-[#e3e8f0] text-xs text-[#58657a]
+            dark:border-slate-600 dark:text-slate-200"
+          >
             {{ element[item.fieldName] }}
           </td>
         </ng-container>
@@ -35,43 +103,62 @@
 
       <!-- Actions for specific item -->
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef class="dark:text-slate-50">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          class="whitespace-nowrap border-y border-solid border-[#e3e8f0] bg-[#f8fafc] !pr-6 text-[11px] font-semibold
+          text-[#58657a] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+        >
           Actions
         </th>
-        <td mat-cell *matCellDef="let element">
-          <div class="flex justify-between">
+        <td
+          mat-cell
+          *matCellDef="let element"
+          class="border-b border-solid border-[#e3e8f0] !pr-6 dark:border-slate-600"
+        >
+          <div class="flex items-center gap-2">
             <button
-              mat-raised-button
+              type="button"
               (click)="selectUser(element, 0)"
-              class="flex justify-center items-center px-2 py-1
-              bg-sky-500 rounded text-sky-50 hover:bg-sky-600"
-              ><mat-icon class="m-0">
-              edit_square
-            </mat-icon>
-          </button>
+              [attr.aria-label]="'Edit ' + element.firstName + ' ' + element.lastName"
+              class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
+              hover:bg-slate-100 dark:hover:bg-slate-600"
+            >
+              <img src="assets/icons/pencil.svg" alt="" width="17" height="17" />
+            </button>
 
-          <button
-            mat-raised-button
-            (click)="selectUser(element, 1)"
-              class="flex justify-center items-center ml-4 px-2 py-1
-              bg-red-500 rounded text-white hover:bg-red-600"
-            ><mat-icon class="m-0">
-            delete
-          </mat-icon>
-        </button>
+            <button
+              type="button"
+              [matMenuTriggerFor]="rowMenu"
+              [attr.aria-label]="'More actions for ' + element.firstName + ' ' + element.lastName"
+              class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
+              hover:bg-slate-100 dark:hover:bg-slate-600"
+            >
+              <img src="assets/icons/ellipsis.svg" alt="" width="17" height="17" />
+            </button>
+            <mat-menu #rowMenu="matMenu">
+              <button mat-menu-item (click)="selectUser(element, 1)">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="headerFields()" class="!h-11"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: headerFields()"
+        class="!h-[62px] hover:bg-slate-50 dark:hover:bg-slate-700"
+      ></tr>
+    </table>
+    </div>
+
+    @if (users().length) {
+      <div class="flex h-16 items-center px-6 text-xs text-[#58657a] dark:text-slate-300">
+        Showing 1–{{ users().length }} of {{ users().length }} users
       </div>
-    </td>
-  </ng-container>
-
-  <tr
-    mat-header-row
-    *matHeaderRowDef="headerFields()"
-  ></tr>
-  <tr
-    mat-row
-    *matRowDef="let row; columns: headerFields()"
-    class="dark:hover:bg-slate-400"
-  ></tr>
-</table>
-</section>
+    }
+  </section>
 </div>

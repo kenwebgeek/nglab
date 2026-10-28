@@ -4,13 +4,14 @@ import { CommonService } from 'src/app/shared/common.service';
 import { ViewActions } from '../../enums/view-actions.enum';
 import { MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 
-import { MatButton } from '@angular/material/button';
+import { RouterLink } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 
 @Component({
     selector: 'app-users-list',
     templateUrl: './users-list.component.html',
-    imports: [MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatButton, MatIcon, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow]
+    imports: [RouterLink, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow]
 })
 export class UsersListComponent {
   private readonly commonService = inject(CommonService);
@@ -18,7 +19,7 @@ export class UsersListComponent {
   readonly headers = input<Array<{ headerName: string, fieldName: keyof User }>>([]);
   readonly users = input<ReadonlyArray<User>>([]);
   readonly user = output<{ user: User, action: ViewActions }>();
-  readonly headerFields = computed(() => [...this.headers().map(data => data.fieldName), 'actions']);
+  readonly headerFields = computed(() => ['name', ...this.headers().map(data => data.fieldName), 'actions']);
 
   alertMessage = '';
   alertType = '';
@@ -28,6 +29,10 @@ export class UsersListComponent {
 
   reloadPage() {
     window.location.reload();
+  }
+
+  initials(user: User): string {
+    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
   }
 
   selectUser(user: User, action: ViewActions) {

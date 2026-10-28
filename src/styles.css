@@ -6,18 +6,8 @@ html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 /* Override default Angular Material styles */
-.mat-column-actions { width: 132px; }
+.mat-column-actions { width: 112px; }
 
 .mat-icon { font-size: 20px; margin-top: 4px; }
-.mat-icon.accounts {
-  height: 36px;
-  font-size: 36px;
-  width: 36px
-}
-.mat-icon.color-toggle {
-  height: 28px;
-  font-size: 28px;
-  width: 28px
-}
 
 .mat-typography h1 { margin: 0; padding: 0; }
