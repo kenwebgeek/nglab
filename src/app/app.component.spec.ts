@@ -22,6 +22,23 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('Angular Lab');
   });
 
+  it('should toggle the dark class when the breadcrumb bar toggle is clicked', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const root = (fixture.nativeElement as HTMLElement).firstElementChild as HTMLElement;
+    const toggle = (fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Toggle dark mode"]') as HTMLButtonElement;
+
+    expect(root.classList.contains('dark')).toBeFalse();
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(root.classList.contains('dark')).toBeTrue();
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(root.classList.contains('dark')).toBeFalse();
+  });
+
   it('should render the sidebar and breadcrumb bar', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();

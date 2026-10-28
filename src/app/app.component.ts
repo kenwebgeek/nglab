@@ -10,9 +10,9 @@ import { RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   title = 'Angular Lab';
-  readonly colorMode = signal('');
+  readonly isDarkMode = signal(false);
 
-  setColorMode(mode: string) {
-    this.colorMode.set(mode);
+  toggleDarkMode() {
+    this.isDarkMode.update(isDark => !isDark);
   }
 }

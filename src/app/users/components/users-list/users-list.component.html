@@ -13,10 +13,10 @@
 <div class="px-4 pb-10 sm:px-10 font-inter [&_*]:font-inter">
   <div class="flex items-center justify-between pb-[30px] pt-[34px]">
     <div class="flex flex-col gap-2">
-      <h2 class="m-0 text-[30px] leading-[1.2] text-[#172033] dark:text-slate-50">
+      <h2 class="m-0 text-[30px] leading-[1.2] text-[#172033] dark:text-[#f8fafc]">
         Users
       </h2>
-      <p class="m-0 text-[13px] leading-normal text-[#58657a] dark:text-slate-300">
+      <p class="m-0 text-[13px] leading-normal text-[#58657a] dark:text-[#94a3b8]">
         Manage your users, profile details, and current activity.
       </p>
     </div>
@@ -33,13 +33,13 @@
 
   <section
     class="overflow-hidden rounded-xl border border-solid border-[#e3e8f0] bg-white
-    dark:border-slate-600 dark:bg-slate-800"
+    dark:border-[#1f2937] dark:bg-[#0f172a]"
   >
     <div class="flex h-20 items-center gap-[10px] px-6">
-      <h3 class="m-0 text-sm font-semibold text-[#172033] dark:text-slate-50">All users</h3>
+      <h3 class="m-0 text-sm font-semibold text-[#172033] dark:text-[#e5e7eb]">All users</h3>
       <span
         class="rounded-full bg-[#eeedff] px-2 py-[3px] text-[11px] font-semibold leading-normal
-        text-[#4338ca]"
+        text-[#4338ca] dark:bg-[#1d1b4a] dark:text-[#c4b5fd]"
         >{{ users().length }}</span
       >
     </div>
@@ -56,23 +56,23 @@
           mat-header-cell
           *matHeaderCellDef
           class="w-[230px] whitespace-nowrap border-y border-solid border-[#e3e8f0] bg-[#f8fafc] !pl-6 text-[11px] font-semibold
-          text-[#58657a] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          text-[#58657a] dark:border-[#1f2937] dark:bg-[#111827] dark:text-[#94a3b8]"
         >
           Name
         </th>
         <td
           mat-cell
           *matCellDef="let element"
-          class="border-b border-solid border-[#e3e8f0] !pl-6 dark:border-slate-600"
+          class="border-b border-solid border-[#e3e8f0] !pl-6 dark:border-[#1f2937]"
         >
           <div class="flex items-center gap-3">
             <span
               class="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-[#f0f2f7]
-              text-[11px] font-semibold text-[#58657a] dark:bg-slate-600 dark:text-slate-100"
+              text-[11px] font-semibold text-[#58657a] dark:bg-[#1f2937] dark:text-[#e5e7eb]"
               aria-hidden="true"
               >{{ initials(element) }}</span
             >
-            <span class="whitespace-nowrap text-[13px] text-[#172033] dark:text-slate-50">
+            <span class="whitespace-nowrap text-[13px] text-[#172033] dark:text-[#f8fafc]">
               {{ element.firstName }} {{ element.lastName }}
             </span>
           </div>
@@ -86,7 +86,7 @@
             mat-header-cell
             *matHeaderCellDef
             class="whitespace-nowrap border-y border-solid border-[#e3e8f0] bg-[#f8fafc] text-[11px] font-semibold
-            text-[#58657a] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            text-[#58657a] dark:border-[#1f2937] dark:bg-[#111827] dark:text-[#94a3b8]"
           >
             {{ item.headerName }}
           </th>
@@ -94,7 +94,7 @@
             mat-cell
             *matCellDef="let element"
             class="whitespace-nowrap border-b border-solid border-[#e3e8f0] text-xs text-[#58657a]
-            dark:border-slate-600 dark:text-slate-200"
+            dark:border-[#1f2937] dark:text-[#94a3b8]"
           >
             {{ element[item.fieldName] }}
           </td>
@@ -107,14 +107,14 @@
           mat-header-cell
           *matHeaderCellDef
           class="whitespace-nowrap border-y border-solid border-[#e3e8f0] bg-[#f8fafc] !pr-6 text-[11px] font-semibold
-          text-[#58657a] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          text-[#58657a] dark:border-[#1f2937] dark:bg-[#111827] dark:text-[#94a3b8]"
         >
           Actions
         </th>
         <td
           mat-cell
           *matCellDef="let element"
-          class="border-b border-solid border-[#e3e8f0] !pr-6 dark:border-slate-600"
+          class="border-b border-solid border-[#e3e8f0] !pr-6 dark:border-[#1f2937]"
         >
           <div class="flex items-center gap-2">
             <button
@@ -122,9 +122,10 @@
               (click)="selectUser(element, 0)"
               [attr.aria-label]="'Edit ' + element.firstName + ' ' + element.lastName"
               class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
-              hover:bg-slate-100 dark:hover:bg-slate-600"
+              hover:bg-slate-100 dark:hover:bg-[#1f2937]"
             >
-              <img src="assets/icons/pencil.svg" alt="" width="17" height="17" />
+              <img src="assets/icons/pencil.svg" alt="" width="17" height="17" class="dark:hidden" />
+              <img src="assets/icons/pencil-dark.svg" alt="" width="17" height="17" class="hidden dark:block" />
             </button>
 
             <button
@@ -132,9 +133,10 @@
               [matMenuTriggerFor]="rowMenu"
               [attr.aria-label]="'More actions for ' + element.firstName + ' ' + element.lastName"
               class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
-              hover:bg-slate-100 dark:hover:bg-slate-600"
+              hover:bg-slate-100 dark:hover:bg-[#1f2937]"
             >
-              <img src="assets/icons/ellipsis.svg" alt="" width="17" height="17" />
+              <img src="assets/icons/ellipsis.svg" alt="" width="17" height="17" class="dark:hidden" />
+              <img src="assets/icons/ellipsis-dark.svg" alt="" width="17" height="17" class="hidden dark:block" />
             </button>
             <mat-menu #rowMenu="matMenu">
               <button mat-menu-item (click)="selectUser(element, 1)">
@@ -150,13 +152,13 @@
       <tr
         mat-row
         *matRowDef="let row; columns: headerFields()"
-        class="!h-[62px] hover:bg-slate-50 dark:hover:bg-slate-700"
+        class="!h-[62px] hover:bg-slate-50 dark:hover:bg-[#111827]"
       ></tr>
     </table>
     </div>
 
     @if (users().length) {
-      <div class="flex h-16 items-center px-6 text-xs text-[#58657a] dark:text-slate-300">
+      <div class="flex h-16 items-center px-6 text-xs text-[#58657a] dark:text-[#94a3b8]">
         Showing 1–{{ users().length }} of {{ users().length }} users
       </div>
     }
