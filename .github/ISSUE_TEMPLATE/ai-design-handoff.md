@@ -1,6 +1,6 @@
 ---
 name: "🚀 AI Design-to-Code Story"
-description: "Template optimized for Figma Agent UI generation and GitHub Copilot implementation."
+about: "Template optimized for Figma Agent UI generation and GitHub Copilot implementation."
 title: "[STORY]: "
 labels: ["ai-generation", "enhancement"]
 assignees: ""
