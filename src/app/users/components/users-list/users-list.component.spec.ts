@@ -5,6 +5,7 @@ import { DebugElement } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { UsersListComponent } from './users-list.component';
+import { ViewActions } from '../../enums/view-actions.enum';
 
 describe('UsersListComponent', () => {
   let component: UsersListComponent;
@@ -36,5 +37,39 @@ describe('UsersListComponent', () => {
     expect(component.headerFields()).toEqual(['name', 'email', 'actions']);
     expect(fixture.nativeElement.querySelector('td.mat-column-name').textContent).toContain('TS');
     expect(fixture.nativeElement.querySelector('td.mat-column-name').textContent).toContain('Tony Stark');
+  });
+
+  it('should emit the Delete action from a delete button beside the edit button', () => {
+    const tony = { id: 1, firstName: 'Tony', lastName: 'Stark', nickname: 'Iron Man', email: 'tony@avengers.com' };
+    fixture.componentRef.setInput('users', [tony]);
+    fixture.detectChanges();
+
+    const emitted: Array<{ user: unknown, action: ViewActions }> = [];
+    component.user.subscribe(value => emitted.push(value));
+
+    const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('td.mat-column-actions button'));
+    expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['Edit Tony Stark', 'Delete Tony Stark']);
+
+    buttons[1].click();
+    expect(emitted).toEqual([{ user: tony, action: ViewActions.Delete }]);
+  });
+
+  it('should highlight only the row of the highlighted user', () => {
+    fixture.componentRef.setInput('users', [
+      { id: 1, firstName: 'Tony', lastName: 'Stark', nickname: 'Iron Man', email: 'tony@avengers.com' },
+      { id: 2, firstName: 'Natasha', lastName: 'Romanoff', nickname: 'Black Widow', email: 'nat@avengers.com' },
+    ]);
+    fixture.componentRef.setInput('highlightedUserId', 2);
+    fixture.detectChanges();
+
+    const [first, second]: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('tr[mat-row]'));
+    expect(first.classList).not.toContain('bg-red-50');
+    expect(second.classList).toContain('bg-red-50');
+    expect(second.classList).not.toContain('hover:bg-slate-50');
+
+    fixture.componentRef.setInput('highlightedUserId', null);
+    fixture.detectChanges();
+    expect(second.classList).not.toContain('bg-red-50');
+    expect(second.classList).toContain('hover:bg-slate-50');
   });
 });

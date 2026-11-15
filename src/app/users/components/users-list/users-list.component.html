@@ -130,20 +130,14 @@
 
             <button
               type="button"
-              [matMenuTriggerFor]="rowMenu"
-              [attr.aria-label]="'More actions for ' + element.firstName + ' ' + element.lastName"
+              (click)="selectUser(element, 1)"
+              [attr.aria-label]="'Delete ' + element.firstName + ' ' + element.lastName"
               class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
               hover:bg-slate-100 dark:hover:bg-[#1f2937]"
             >
-              <img src="assets/icons/ellipsis.svg" alt="" width="17" height="17" class="dark:hidden" />
-              <img src="assets/icons/ellipsis-dark.svg" alt="" width="17" height="17" class="hidden dark:block" />
+              <img src="assets/icons/trash-2.svg" alt="" width="17" height="17" class="dark:hidden" />
+              <img src="assets/icons/trash-2-dark.svg" alt="" width="17" height="17" class="hidden dark:block" />
             </button>
-            <mat-menu #rowMenu="matMenu">
-              <button mat-menu-item (click)="selectUser(element, 1)">
-                <mat-icon>delete</mat-icon>
-                <span>Delete</span>
-              </button>
-            </mat-menu>
           </div>
         </td>
       </ng-container>
@@ -152,7 +146,8 @@
       <tr
         mat-row
         *matRowDef="let row; columns: headerFields()"
-        class="!h-[62px] hover:bg-slate-50 dark:hover:bg-[#111827]"
+        class="!h-[62px] transition-colors duration-300 ease-in-out motion-reduce:transition-none"
+        [class]="rowClass(row)"
       ></tr>
     </table>
     </div>

@@ -50,12 +50,39 @@ describe('ListComponent', () => {
     expect(navigate).toHaveBeenCalledWith(['users', 'manage', 1]);
   });
 
-  it('should delete a user and remove it from the list', () => {
+  it('should ask for confirmation before deleting and remove the user once confirmed', () => {
     http.expectOne('http://localhost:3000/users').flush(users);
 
     component.selectUser({ user: users[0], action: ViewActions.Delete });
+    fixture.detectChanges();
+
+    http.expectNone('http://localhost:3000/users/1');
+    const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog');
+    expect(dialog.open).toBeTrue();
+    expect(dialog.textContent).toContain('Are you sure you want to delete Tony Stark?');
+    const rows: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('tr[mat-row]'));
+    expect(rows[0].classList).toContain('bg-red-50');
+    expect(rows[1].classList).not.toContain('bg-red-50');
+
+    component.confirmDelete();
+    fixture.detectChanges();
     http.expectOne('http://localhost:3000/users/1').flush({});
 
     expect(component.users()).toEqual([users[1]]);
+    expect(dialog.open).toBeFalse();
+  });
+
+  it('should keep the user when the delete prompt is cancelled', () => {
+    http.expectOne('http://localhost:3000/users').flush(users);
+
+    component.selectUser({ user: users[0], action: ViewActions.Delete });
+    fixture.detectChanges();
+    component.cancelDelete();
+    fixture.detectChanges();
+
+    http.expectNone('http://localhost:3000/users/1');
+    expect(component.users()).toEqual(users);
+    expect(fixture.nativeElement.querySelector('dialog').open).toBeFalse();
+    expect(fixture.nativeElement.querySelector('tr[mat-row]').classList).not.toContain('bg-red-50');
   });
 });

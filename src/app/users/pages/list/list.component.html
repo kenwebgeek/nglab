@@ -1,5 +1,15 @@
 <app-users-list
   [headers]="headers"
   [users]="users()"
+  [highlightedUserId]="userToDelete()?.id ?? null"
   (user)="selectUser($event)"
 ></app-users-list>
+
+<app-confirm-dialog
+  [open]="userToDelete() !== null"
+  heading="Delete user"
+  [message]="deleteMessage()"
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+></app-confirm-dialog>

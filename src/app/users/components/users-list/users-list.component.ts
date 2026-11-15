@@ -5,19 +5,19 @@ import { ViewActions } from '../../enums/view-actions.enum';
 import { MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 
 import { RouterLink } from '@angular/router';
-import { MatIcon } from '@angular/material/icon';
-import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 
 @Component({
     selector: 'app-users-list',
     templateUrl: './users-list.component.html',
-    imports: [RouterLink, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow]
+    imports: [RouterLink, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow]
 })
 export class UsersListComponent {
   private readonly commonService = inject(CommonService);
 
   readonly headers = input<Array<{ headerName: string, fieldName: keyof User }>>([]);
   readonly users = input<ReadonlyArray<User>>([]);
+  // Row to mark as the target of a pending destructive action
+  readonly highlightedUserId = input<number | null>(null);
   readonly user = output<{ user: User, action: ViewActions }>();
   readonly headerFields = computed(() => ['name', ...this.headers().map(data => data.fieldName), 'actions']);
 
@@ -29,6 +29,13 @@ export class UsersListComponent {
 
   reloadPage() {
     window.location.reload();
+  }
+
+  // The highlight replaces the hover colours so it stays visible under the pointer
+  rowClass(user: User): string {
+    return user.id === this.highlightedUserId()
+      ? 'bg-red-50 dark:bg-red-500/10'
+      : 'bg-transparent hover:bg-slate-50 dark:hover:bg-[#111827]';
   }
 
   initials(user: User): string {
