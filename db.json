@@ -111,14 +111,6 @@
       "email": "scott@x-men.com",
       "currentActivity": "Fighting evil mutants",
       "id": 14
-    },
-    {
-      "firstName": "Jean",
-      "lastName": "Grey-Summers",
-      "nickname": "Jean Grey",
-      "email": "phoenix@x-men.com",
-      "currentActivity": "Transforming into The Phoenix",
-      "id": 15
     }
   ]
 }
