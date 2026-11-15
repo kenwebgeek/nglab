@@ -1,6 +1,6 @@
 # Plan: migrate `db.json` to PostgreSQL
 
-Status: **decisions 1–3 made (Express + TypeScript, Drizzle, Docker Compose with a current Postgres). Decisions 4–7 still use their defaults and need a quick confirmation.** No code has been changed and no database has been connected to. Implementation starts with Phase 1.
+Status: **all decisions made. Phase 1 (Docker Postgres 18) is done and verified; Phase 2 (schema and migrations) is next.**
 
 ## What we found
 
@@ -32,7 +32,7 @@ Angular app  ->  Express API (server/, TypeScript)  ->  Drizzle  ->  PostgreSQL 
 |---|---|---|
 | `id` | integer, identity | Keeps numeric ids, so no frontend change. |
 | `first_name`, `last_name` | text, not null | Minimum 2 characters and a maximum length, matching the form rules. |
-| `nickname`, `current_activity` | text, not null, default `''` | Matches the data exactly (blanks are `''` today). |
+| `nickname`, `current_activity` | text, **nullable**, no default | Blank values are stored as `NULL`. The API converts blank input to `NULL` on write and returns `''` on read, so the Angular `User` type doesn't change. |
 | `email` | `citext`, not null, **unique** | Case-insensitive uniqueness. |
 | `created_at`, `updated_at` | timestamptz | Added now because they're cheap. |
 
@@ -44,7 +44,7 @@ The API and frontend keep camelCase, while the database uses snake_case, with a 
 
 Each phase ends with a check and a pause for review, as in the Angular migration.
 
-**Phase 0: decisions.** Decisions 1–3 are settled (see the end of this doc). Confirm 4–7 or change them, and review `.vscode/db-local.json`.
+**Phase 0: decisions.** Done (see the end of this doc).
 
 **Phase 1: provision the database.**
 - A `docker-compose.yml` with a pinned Postgres major version (17 or newer), a named volume and a health check. It would use a non-default host port (5433) so it can't collide with the existing Postgres 14 on 5432.
@@ -106,8 +106,7 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 2. **Database access:** **Drizzle**, with `drizzle-kit` for migrations.
 3. **Where Postgres runs:** **Docker Compose with a current Postgres (17 or newer)**. The local Postgres 14 isn't used.
 
-**Still to confirm (defaults assumed):**
-4. **Primary key:** **integer identity**, which needs no frontend change, or UUID, which is better once auth exists but needs frontend type changes.
-5. **Blank nickname or activity:** **store `''`** (matches today exactly), or `NULL` (cleaner relationally, but needs API mapping).
-6. **Email uniqueness:** **enforce it (case-insensitive)**, or leave duplicates allowed as they are now.
-7. **Deletes:** **hard delete** as today. Once users own auth data, soft-delete or an audit trail is likely wanted, so that's a later decision.
+4. **Primary key:** **integer identity**, so the Angular app needs no changes.
+5. **Blank nickname or activity:** **store `NULL`**. The API maps blanks to `NULL` on write and `NULL` to `''` on read, so the frontend contract is unchanged. The `db.json` import converts `''` to `NULL`.
+6. **Email uniqueness:** **enforced, case-insensitive** (`citext`). Duplicates get a 409.
+7. **Deletes:** **hard delete**, as today. Soft delete or an audit trail is a later decision, once users own auth data.
