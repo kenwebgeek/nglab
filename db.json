@@ -68,7 +68,7 @@
       "firstName": "James",
       "lastName": "Howlett",
       "nickname": "Wolverine",
-      "email": "logan@xmen.com",
+      "email": "logan@x-men.com",
       "currentActivity": "Slicing and dicing",
       "id": 9
     },
@@ -79,6 +79,46 @@
       "email": "stretchy@fantasticfour.com",
       "currentActivity": "Stretching",
       "id": 10
+    },
+    {
+      "firstName": "Matt",
+      "lastName": "Murdock",
+      "nickname": "Daredevil",
+      "email": "matt@law.com",
+      "currentActivity": "Keeping Hell's Kitchen safe",
+      "id": 11
+    },
+    {
+      "firstName": "Norman",
+      "lastName": "Osborn",
+      "nickname": "Green Goblin",
+      "email": "norman@oscorp.com",
+      "currentActivity": "Terrorizing Spider-Man",
+      "id": 12
+    },
+    {
+      "firstName": "Peter",
+      "lastName": "Quill",
+      "nickname": "Star-Lord",
+      "email": "peter@earth.com",
+      "currentActivity": "Saving the galaxy",
+      "id": 13
+    },
+    {
+      "firstName": "Scott",
+      "lastName": "Summers",
+      "nickname": "Cyclops",
+      "email": "scott@x-men.com",
+      "currentActivity": "Fighting evil mutants",
+      "id": 14
+    },
+    {
+      "firstName": "Jean",
+      "lastName": "Grey-Summers",
+      "nickname": "Jean Grey",
+      "email": "phoenix@x-men.com",
+      "currentActivity": "Transforming into The Phoenix",
+      "id": 15
     }
   ]
 }
