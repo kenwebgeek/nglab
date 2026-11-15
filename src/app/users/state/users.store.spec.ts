@@ -40,7 +40,7 @@ describe('UsersStore', () => {
     expect(store.users()).toEqual([tony, nat]);
   });
 
-  it('add() appends the created user and navigates to the list', () => {
+  it('add() appends the created user, announces it, highlights it and navigates to the list', () => {
     seed([tony]);
     store.add({ ...nat, id: '' as unknown as number });
 
@@ -49,10 +49,30 @@ describe('UsersStore', () => {
     req.flush(nat);
 
     expect(store.users()).toEqual([tony, nat]);
+    expect(store.notice()).toEqual({ type: 'success', message: 'Natasha Romanoff was added.' });
+    expect(store.newUserId()).toBe(2);
     expect(navigate).toHaveBeenCalledWith(['users']);
   });
 
-  it('update() replaces the user and navigates to the list', () => {
+  it('clears the new-user highlight and the success notice after a short while', () => {
+    jasmine.clock().install();
+    try {
+      seed([tony]);
+      store.add({ ...nat, id: '' as unknown as number });
+      http.expectOne(api).flush(nat);
+
+      jasmine.clock().tick(4000);
+      expect(store.newUserId()).toBeNull();
+      expect(store.notice()).not.toBeNull();
+
+      jasmine.clock().tick(1000);
+      expect(store.notice()).toBeNull();
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+
+  it('update() replaces the user, announces it and navigates to the list', () => {
     seed([tony, nat]);
     const updated = { ...tony, nickname: 'Genius' };
     store.update(updated);
@@ -62,10 +82,11 @@ describe('UsersStore', () => {
     req.flush(updated);
 
     expect(store.users()).toEqual([updated, nat]);
+    expect(store.notice()).toEqual({ type: 'success', message: 'Tony Stark was updated.' });
     expect(navigate).toHaveBeenCalledWith(['users']);
   });
 
-  it('remove() deletes the user by id', () => {
+  it('remove() deletes the user by id and announces it', () => {
     seed([tony, nat]);
     store.remove(1);
 
@@ -74,13 +95,34 @@ describe('UsersStore', () => {
     req.flush({});
 
     expect(store.users()).toEqual([nat]);
+    expect(store.notice()).toEqual({ type: 'success', message: 'Tony Stark was deleted.' });
   });
 
-  it('leaves the state untouched when a request fails', () => {
+  it('leaves the users untouched and shows an error when a request fails', () => {
     seed([tony]);
     store.remove(1);
     http.expectOne(`${api}/1`).flush('error', { status: 500, statusText: 'Server Error' });
 
     expect(store.users()).toEqual([tony]);
+    expect(store.notice()).toEqual({ type: 'error', message: 'Unable to delete the user. Please try again.' });
+  });
+
+  it('keeps the form open and the list unchanged when adding fails', () => {
+    seed([tony]);
+    store.add({ ...nat, id: '' as unknown as number });
+    http.expectOne(api).flush('error', { status: 500, statusText: 'Server Error' });
+
+    expect(store.users()).toEqual([tony]);
+    expect(store.newUserId()).toBeNull();
+    expect(store.notice()?.type).toBe('error');
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('dismissNotice() clears the notice', () => {
+    seed([tony]);
+    store.remove(1);
+    http.expectOne(`${api}/1`).flush({});
+    store.dismissNotice();
+    expect(store.notice()).toBeNull();
   });
 });

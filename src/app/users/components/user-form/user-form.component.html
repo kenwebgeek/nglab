@@ -1,207 +1,225 @@
-<div class="px-4 pb-10 sm:px-10 lg:px-[72px] font-inter [&_*]:font-inter">
-  <a
-    routerLink="/users"
-    class="mt-[27px] inline-flex h-5 items-center gap-2 text-[13px] font-medium leading-[1.5] text-[#58657a]
-    no-underline hover:text-[#172033] dark:text-[#a2aec3] dark:hover:text-[#f3f5fc]"
-  >
-    <span class="flex size-4 shrink-0 items-center justify-center">
-      <img src="assets/icons/arrow-left.svg" alt="" width="11" height="11" class="dark:hidden" />
-      <img src="assets/icons/arrow-left-dark.svg" alt="" width="11" height="11" class="hidden dark:block" />
-    </span>
-    Back to users
-  </a>
-
-  <h2 class="m-0 mt-[21px] text-[32px] font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-    {{ selectedUser() ? 'Update/View user' : 'Add user' }}
-  </h2>
-  <p class="m-0 mb-10 mt-[3px] text-[15px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
-    {{ selectedUser() ? 'Review or update this user profile in your workspace.' : 'Create a new user profile in your workspace.' }}
-  </p>
-
-  <div class="flex flex-col items-start gap-6 lg:flex-row">
-    <!-- User details form -->
-    <form
-      [formGroup]="userForm"
-      (ngSubmit)="emitAction()"
-      class="w-full overflow-hidden rounded-[14px] border border-solid border-[#e3e8f0] bg-white
-      dark:border-[#2c3850] dark:bg-[#131c2d] lg:max-w-[720px] lg:flex-1"
+<dialog
+  #dialog
+  aria-labelledby="user-form-heading"
+  (cancel)="onCancel($event)"
+  (click)="onBackdropClick($event)"
+  [class.leaving]="closing()"
+  [class.animate-dialog-out]="closing()"
+  class="animate-dialog-in backdrop:animate-fade-in [&.leaving]:backdrop:animate-fade-out
+  motion-reduce:animate-none motion-reduce:backdrop:animate-none m-auto w-[calc(100%-32px)] max-w-[720px] overflow-hidden rounded-[14px] border border-solid
+  border-[#e2e8f0] bg-white p-0 font-inter text-[#172033] shadow-[0_24px_72px_rgba(0,0,0,0.22)]
+  backdrop:bg-[#0f172a]/[0.56] dark:border-[#2c3850] dark:bg-[#131c2d] dark:text-[#f3f5fc] [&_*]:font-inter"
+>
+  <form [formGroup]="userForm" (ngSubmit)="emitAction()" class="max-h-[calc(100vh-32px)] overflow-y-auto">
+    <div
+      class="relative flex items-start justify-between gap-4 border-0 border-b border-solid border-[#e2e8f0]
+      px-[31px] pb-[17px] pt-6 dark:border-[#2c3850]"
     >
-      <div
-        class="flex items-start justify-between border-0 border-b border-solid border-[#e3e8f0] px-[30px]
-        pb-[26px] pt-6 dark:border-[#2c3850]"
-      >
-        <div>
-          <h3 class="m-0 text-lg font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">User details</h3>
-          <p class="m-0 mt-1 text-sm leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
-            {{ selectedUser() ? 'Update the details below to edit this profile.' : 'Enter the details below to create a profile.' }}
-          </p>
-        </div>
-        <p class="m-0 mt-1 whitespace-nowrap text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">* Required</p>
+      <div>
+        <h2 id="user-form-heading" class="m-0 text-[22px] font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+          {{ selectedUser() ? 'Update/View user' : 'Add user' }}
+        </h2>
+        <p class="m-0 text-sm leading-[1.5] text-[#64748b] dark:text-[#a2aec3]">
+          {{ selectedUser() ? 'Update the details below to edit this profile.' : 'Enter the details below to create a profile.' }}
+        </p>
       </div>
+      <div class="flex items-start gap-3">
+        <p class="m-0 mt-[37px] whitespace-nowrap text-xs leading-[1.5] text-[#64748b] dark:text-[#a2aec3]">* Required</p>
+        <button
+          type="button"
+          (click)="cancelled.emit()"
+          aria-label="Close dialog"
+          class="absolute right-[17px] top-[23px] flex size-8 cursor-pointer items-center justify-center border-0
+          bg-transparent p-0 text-[26px] leading-none text-[#64748b] hover:text-[#172033]
+          dark:text-[#a2aec3] dark:hover:text-[#f3f5fc]"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    </div>
 
-      <div class="flex flex-col gap-6 px-[30px] pb-[38px] pt-6">
-        <div class="flex flex-col gap-6 sm:flex-row">
-          <!-- First name -->
-          <div class="flex min-w-0 flex-1 flex-col gap-[9px]">
-            <label for="firstName" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-              First name
-              <span class="text-[#4338ca] dark:text-[#a99aff]" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="firstName"
-              formControlName="firstName"
-              type="text"
-              placeholder="e.g. Alex"
-              aria-required="true"
-              [attr.aria-invalid]="showError('firstName')"
-              [attr.aria-describedby]="showError('firstName') ? 'firstName-error' : null"
-              class="h-12 w-full rounded-lg border border-solid border-[#d5dbe7] bg-white px-[14px] text-sm
-              text-[#172033] placeholder:text-[#7c879a] focus:border-[#4f46e5] focus:outline-none focus:ring-1
-              focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
-              dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
-              dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
-            />
-            @if (showError('firstName')) {
-              <p id="firstName-error" class="m-0 text-xs text-red-500 dark:text-red-400">
-                @if (firstName?.errors?.['required']) {
-                  First name is required
-                } @else {
-                  First name must be at least 2 characters
-                }
-              </p>
-            }
-          </div>
+    @if (errorMessage(); as error) {
+      <app-alerts
+        animate.leave="animate-alert-out motion-reduce:animate-none"
+        spacing="px-[31px] pt-6"
+        alert="error"
+        [message]="error"
+      />
+    }
 
-          <!-- Last name -->
-          <div class="flex min-w-0 flex-1 flex-col gap-[9px]">
-            <label for="lastName" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-              Last name
-              <span class="text-[#4338ca] dark:text-[#a99aff]" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="lastName"
-              formControlName="lastName"
-              type="text"
-              placeholder="e.g. Morgan"
-              aria-required="true"
-              [attr.aria-invalid]="showError('lastName')"
-              [attr.aria-describedby]="showError('lastName') ? 'lastName-error' : null"
-              class="h-12 w-full rounded-lg border border-solid border-[#d5dbe7] bg-white px-[14px] text-sm
-              text-[#172033] placeholder:text-[#7c879a] focus:border-[#4f46e5] focus:outline-none focus:ring-1
-              focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
-              dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
-              dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
-            />
-            @if (showError('lastName')) {
-              <p id="lastName-error" class="m-0 text-xs text-red-500 dark:text-red-400">
-                @if (lastName?.errors?.['required']) {
-                  Last name is required
-                } @else {
-                  Last name must be at least 2 characters
-                }
-              </p>
-            }
-          </div>
-        </div>
-
-        <!-- Nickname -->
-        <div class="flex flex-col gap-[9px]">
-          <label for="nickname" class="flex items-baseline gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-            Nickname
-            <span class="text-xs font-normal text-[#58657a] dark:text-[#a2aec3]">(optional)</span>
+    <div class="flex flex-col gap-6 px-[31px] pb-[26px] pt-6">
+      <div class="flex flex-col gap-6 sm:flex-row">
+        <!-- First name -->
+        <div class="flex min-w-0 flex-1 flex-col gap-[9px]">
+          <label for="firstName" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+            First name
+            <span class="text-[#4f46e5] dark:text-[#a99aff]" aria-hidden="true">*</span>
           </label>
           <input
-            id="nickname"
-            formControlName="nickname"
+            id="firstName"
+            formControlName="firstName"
             type="text"
-            placeholder="e.g. Alex M."
-            class="h-12 w-full rounded-lg border border-solid border-[#d5dbe7] bg-white px-[14px] text-sm
-            text-[#172033] placeholder:text-[#7c879a] focus:border-[#4f46e5] focus:outline-none focus:ring-1
-            focus:ring-[#4f46e5] dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc]
-            dark:placeholder:text-[#748299] dark:focus:border-[#8064f3] dark:focus:ring-[#8064f3]"
-          />
-        </div>
-
-        <!-- Email -->
-        <div class="flex flex-col gap-[9px]">
-          <label for="email" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-            Email
-            <span class="text-[#4338ca] dark:text-[#a99aff]" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="email"
-            formControlName="email"
-            type="email"
-            placeholder="name@company.com"
+            placeholder="e.g. Alex"
             aria-required="true"
-            [attr.aria-invalid]="showError('email')"
-            [attr.aria-describedby]="showError('email') ? 'email-error' : null"
-            class="h-12 w-full rounded-lg border border-solid border-[#d5dbe7] bg-white px-[14px] text-sm
-            text-[#172033] placeholder:text-[#7c879a] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+            [attr.aria-invalid]="showError('firstName')"
+            [attr.aria-describedby]="showError('firstName') ? 'firstName-error' : null"
+            class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+            text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
             focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
             dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
             dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
           />
-          @if (showError('email')) {
-            <p id="email-error" class="m-0 text-xs text-red-500 dark:text-red-400">
-              @if (email?.errors?.['required']) {
-                Email is required
+          @if (showError('firstName')) {
+            <p id="firstName-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+              @if (firstName?.errors?.['required']) {
+                First name is required
               } @else {
-                Email must be in "example&#64;example.com" format
+                First name must be at least 2 characters
               }
             </p>
           }
         </div>
 
-        <!-- Current activity -->
-        <div class="flex flex-col gap-[9px]">
-          <label for="currentActivity" class="flex items-baseline gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-            Current activity
-            <span class="text-xs font-normal text-[#58657a] dark:text-[#a2aec3]">(optional)</span>
+        <!-- Last name -->
+        <div class="flex min-w-0 flex-1 flex-col gap-[9px]">
+          <label for="lastName" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+            Last name
+            <span class="text-[#4f46e5] dark:text-[#a99aff]" aria-hidden="true">*</span>
           </label>
           <input
-            id="currentActivity"
-            formControlName="currentActivity"
+            id="lastName"
+            formControlName="lastName"
             type="text"
-            placeholder="What are they working on?"
-            class="h-12 w-full rounded-lg border border-solid border-[#d5dbe7] bg-white px-[14px] text-sm
-            text-[#172033] placeholder:text-[#7c879a] focus:border-[#4f46e5] focus:outline-none focus:ring-1
-            focus:ring-[#4f46e5] dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc]
-            dark:placeholder:text-[#748299] dark:focus:border-[#8064f3] dark:focus:ring-[#8064f3]"
+            placeholder="e.g. Morgan"
+            aria-required="true"
+            [attr.aria-invalid]="showError('lastName')"
+            [attr.aria-describedby]="showError('lastName') ? 'lastName-error' : null"
+            class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+            text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+            focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
+            dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
+            dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
           />
+          @if (showError('lastName')) {
+            <p id="lastName-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+              @if (lastName?.errors?.['required']) {
+                Last name is required
+              } @else {
+                Last name must be at least 2 characters
+              }
+            </p>
+          }
         </div>
       </div>
 
-      <!-- Form actions -->
-      <div
-        class="flex items-center justify-between gap-4 border-0 border-t border-solid border-[#e3e8f0] px-[30px]
-        py-6 dark:border-[#2c3850]"
+      <!-- Nickname -->
+      <div class="flex flex-col gap-[9px]">
+        <label for="nickname" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+          Nickname
+          <span class="text-xs font-normal text-[#64748b] dark:text-[#a2aec3]">(optional)</span>
+        </label>
+        <input
+          id="nickname"
+          formControlName="nickname"
+          type="text"
+          placeholder="e.g. Alex M."
+          class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+          text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+          focus:ring-[#4f46e5] dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc]
+          dark:placeholder:text-[#748299] dark:focus:border-[#8064f3] dark:focus:ring-[#8064f3]"
+        />
+      </div>
+
+      <!-- Email -->
+      <div class="flex flex-col gap-[9px]">
+        <label for="email" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+          Email
+          <span class="text-[#4f46e5] dark:text-[#a99aff]" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="email"
+          formControlName="email"
+          type="email"
+          placeholder="name@company.com"
+          aria-required="true"
+          [attr.aria-invalid]="showError('email')"
+          [attr.aria-describedby]="showError('email') ? 'email-error' : null"
+          class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+          text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+          focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
+          dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
+          dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
+        />
+        @if (showError('email')) {
+          <p id="email-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+            @if (email?.errors?.['required']) {
+              Email is required
+            } @else {
+              Email must be in "example&#64;example.com" format
+            }
+          </p>
+        }
+      </div>
+
+      <!-- Current activity -->
+      <div class="flex flex-col gap-[9px]">
+        <label for="currentActivity" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+          Current activity
+          <span class="text-xs font-normal text-[#64748b] dark:text-[#a2aec3]">(optional)</span>
+        </label>
+        <input
+          id="currentActivity"
+          formControlName="currentActivity"
+          type="text"
+          placeholder="What are they working on?"
+          class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+          text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+          focus:ring-[#4f46e5] dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc]
+          dark:placeholder:text-[#748299] dark:focus:border-[#8064f3] dark:focus:ring-[#8064f3]"
+        />
+      </div>
+    </div>
+
+    <!-- Form actions -->
+    <div
+      class="flex items-center justify-between gap-4 border-0 border-t border-solid border-[#e2e8f0] px-[31px]
+      py-[25px] dark:border-[#2c3850]"
+    >
+      <button
+        type="button"
+        (click)="resetForm()"
+        class="flex cursor-pointer items-center gap-[9px] border-0 bg-transparent p-0 text-[13px] font-medium
+        leading-[1.5] text-[#172033] hover:text-[#4f46e5] dark:text-[#f3f5fc] dark:hover:text-[#a99aff]"
       >
+        <span class="relative block size-[17px] shrink-0" aria-hidden="true">
+          <img
+            src="assets/icons/rotate-ccw.svg"
+            alt=""
+            width="14.32"
+            height="14.45"
+            class="absolute left-[1.28px] top-[1.13px] max-w-none dark:hidden"
+          />
+          <img
+            src="assets/icons/rotate-ccw-dark.svg"
+            alt=""
+            width="14.32"
+            height="14.45"
+            class="absolute left-[1.28px] top-[1.13px] hidden max-w-none dark:block"
+          />
+        </span>
+        Reset form
+      </button>
+
+      <div class="flex items-center gap-4">
         <button
           type="button"
-          (click)="resetForm()"
-          class="flex items-center gap-[9px] border-0 bg-transparent p-0 text-[13px] font-medium leading-[1.5]
-          text-[#58657a] hover:text-[#172033] dark:text-[#a2aec3] dark:hover:text-[#f3f5fc]"
+          (click)="cancelled.emit()"
+          class="h-11 w-[100px] cursor-pointer rounded-md border border-solid border-[#cbd5e1] bg-white text-sm
+          font-normal text-[#334155] hover:bg-slate-50 dark:border-[#2c3850] dark:bg-transparent
+          dark:text-[#f3f5fc] dark:hover:bg-[#1f2937]"
         >
-          <span class="relative block size-[17px] shrink-0" aria-hidden="true">
-            <img
-              src="assets/icons/rotate-ccw.svg"
-              alt=""
-              width="14.32"
-              height="14.45"
-              class="absolute left-[1.28px] top-[1.13px] max-w-none dark:hidden"
-            />
-            <img
-              src="assets/icons/rotate-ccw-dark.svg"
-              alt=""
-              width="14.32"
-              height="14.45"
-              class="absolute left-[1.28px] top-[1.13px] hidden max-w-none dark:block"
-            />
-          </span>
-          Reset form
+          Cancel
         </button>
-
         <button
           type="submit"
           class="flex h-11 w-40 shrink-0 cursor-pointer items-center justify-center gap-[9px] rounded-lg border-0
@@ -220,119 +238,6 @@
           {{ selectedUser() ? 'Update user' : 'Create user' }}
         </button>
       </div>
-    </form>
-
-    <!-- Profile guidance -->
-    <aside class="flex w-full shrink-0 flex-col lg:w-[320px]">
-      <div
-        class="rounded-[14px] border border-solid border-[#e3e8f0] bg-[#f8fafc] p-[22px] dark:border-[#253149]
-        dark:bg-[#111a2a]"
-      >
-        <div
-          class="relative size-9 rounded-[9px] bg-[#eeedff] dark:bg-[#292442]"
-          aria-hidden="true"
-        >
-          <img
-            src="assets/icons/info.svg"
-            alt=""
-            width="16.7"
-            height="16.7"
-            class="absolute left-[9.65px] top-[9.65px] max-w-none dark:hidden"
-          />
-          <img
-            src="assets/icons/info-dark.svg"
-            alt=""
-            width="16.7"
-            height="16.7"
-            class="absolute left-[9.65px] top-[9.65px] hidden max-w-none dark:block"
-          />
-        </div>
-        <h3 class="m-0 mt-[17px] text-[17px] font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-          Before you create
-        </h3>
-        <p class="m-0 mt-2 text-sm leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
-          A few details are all you need to get a new profile started.
-        </p>
-
-        <div class="my-[19px] h-px bg-[#e3e8f0] dark:bg-[#2c3850]"></div>
-
-        <ul class="m-0 flex list-none flex-col gap-[21px] p-0">
-          <li class="flex gap-3">
-            <span class="relative mt-1 block size-[18px] shrink-0" aria-hidden="true">
-              <img
-                src="assets/icons/check.svg"
-                alt=""
-                width="12.2"
-                height="9.2"
-                class="absolute left-[2.9px] top-[3.65px] max-w-none dark:hidden"
-              />
-              <img
-                src="assets/icons/check-dark.svg"
-                alt=""
-                width="12.2"
-                height="9.2"
-                class="absolute left-[2.9px] top-[3.65px] hidden max-w-none dark:block"
-              />
-            </span>
-            <div>
-              <p class="m-0 text-[13px] font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-                Start with the essentials
-              </p>
-              <p class="m-0 mt-1 text-[13px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
-                First name, last name, and email are required.
-              </p>
-            </div>
-          </li>
-          <li class="flex gap-3">
-            <span class="relative mt-1 block size-[18px] shrink-0" aria-hidden="true">
-              <img
-                src="assets/icons/plus-small.svg"
-                alt=""
-                width="12.2"
-                height="12.2"
-                class="absolute left-[2.9px] top-[2.9px] max-w-none dark:hidden"
-              />
-              <img
-                src="assets/icons/plus-small-dark.svg"
-                alt=""
-                width="12.2"
-                height="12.2"
-                class="absolute left-[2.9px] top-[2.9px] hidden max-w-none dark:block"
-              />
-            </span>
-            <div>
-              <p class="m-0 text-[13px] font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-                Make it personal
-              </p>
-              <p class="m-0 mt-1 text-[13px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
-                Nickname and current activity can be added now or later.
-              </p>
-            </div>
-          </li>
-        </ul>
-      </div>
-
-      <div class="mt-5 flex items-start gap-[11px] px-[15px]">
-        <span class="relative mt-[5px] block size-4 shrink-0" aria-hidden="true">
-          <img
-            src="assets/icons/square-pen.svg"
-            alt=""
-            width="13.45"
-            height="13.45"
-            class="absolute left-[1.82px] top-[0.74px] max-w-none dark:hidden"
-          />
-          <img
-            src="assets/icons/square-pen-dark.svg"
-            alt=""
-            width="13.45"
-            height="13.45"
-            class="absolute left-[1.82px] top-[0.74px] hidden max-w-none dark:block"
-          />
-        </span>
-        <p class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
-          You can edit profile details anytime from the Users page.
-        </p>
-      </div>
-    </aside>
-  </div>
-</div>
+    </div>
+  </form>
+</dialog>

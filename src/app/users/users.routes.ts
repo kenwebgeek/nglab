@@ -1,14 +1,15 @@
 import { Routes } from '@angular/router';
-import { FormComponent } from './pages/form/form.component';
+import { FormComponent, playLeaveAnimation } from './pages/form/form.component';
 import { ListComponent } from './pages/list/list.component';
 
 export const USERS_ROUTES: Routes = [
-  { path: '', component: ListComponent },
   {
-    path: 'manage',
+    path: '',
+    component: ListComponent,
+    // The form renders as an overlay on top of the list
     children: [
-      { path: '', component: FormComponent },
-      { path: ':id', component: FormComponent },
+      { path: 'manage', component: FormComponent, canDeactivate: [playLeaveAnimation] },
+      { path: 'manage/:id', component: FormComponent, canDeactivate: [playLeaveAnimation] },
     ],
   },
 ];

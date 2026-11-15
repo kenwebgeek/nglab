@@ -1,9 +1,12 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { User } from '../../models/user.interface';
 import { ViewActions } from '../../enums/view-actions.enum';
+import { UsersStore } from '../../state/users.store';
 import { ListComponent } from './list.component';
 
 const users: User[] = [
@@ -69,6 +72,7 @@ describe('ListComponent', () => {
     http.expectOne('http://localhost:3000/users/1').flush({});
 
     expect(component.users()).toEqual([users[1]]);
+    dialog.dispatchEvent(new Event('animationend'));
     expect(dialog.open).toBeFalse();
   });
 
@@ -82,7 +86,72 @@ describe('ListComponent', () => {
 
     http.expectNone('http://localhost:3000/users/1');
     expect(component.users()).toEqual(users);
-    expect(fixture.nativeElement.querySelector('dialog').open).toBeFalse();
+    const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog');
+    dialog.dispatchEvent(new Event('animationend'));
+    expect(dialog.open).toBeFalse();
     expect(fixture.nativeElement.querySelector('tr[mat-row]').classList).not.toContain('bg-red-50');
+  });
+});
+
+@Component({ template: '' })
+class StubFormComponent {}
+
+describe('ListComponent row highlights and notices', () => {
+  let http: HttpTestingController;
+  let harness: RouterTestingHarness;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([
+          { path: 'users', component: ListComponent, children: [{ path: 'manage/:id', component: StubFormComponent }] },
+        ]),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    harness = await RouterTestingHarness.create();
+  });
+
+  const rows = () => Array.from(harness.routeNativeElement!.querySelectorAll('tr[mat-row]')) as HTMLElement[];
+
+  it('should highlight the row being edited in blue while its form is open', async () => {
+    await harness.navigateByUrl('/users/manage/1', ListComponent);
+    http.expectOne('http://localhost:3000/users').flush(users);
+    harness.detectChanges();
+
+    expect(rows()[0].classList).toContain('bg-blue-50');
+    expect(rows()[1].classList).not.toContain('bg-blue-50');
+
+    await harness.navigateByUrl('/users', ListComponent);
+    harness.detectChanges();
+    expect(rows()[0].classList).not.toContain('bg-blue-50');
+  });
+
+  it('should highlight a newly added row in green and show the success message above the list', async () => {
+    await harness.navigateByUrl('/users', ListComponent);
+    http.expectOne('http://localhost:3000/users').flush(users);
+
+    const store = TestBed.inject(UsersStore);
+    store.add({ firstName: 'Bruce', lastName: 'Banner', email: 'bruce@avengers.com' } as User);
+    http.expectOne({ method: 'POST', url: 'http://localhost:3000/users' })
+      .flush({ id: 3, firstName: 'Bruce', lastName: 'Banner', email: 'bruce@avengers.com' });
+    harness.detectChanges();
+
+    expect(rows()[2].classList).toContain('bg-green-50');
+    expect(harness.routeNativeElement!.querySelector('[role=status]')?.textContent).toContain('Bruce Banner was added.');
+  });
+
+  it('should show an error message when an action fails', async () => {
+    await harness.navigateByUrl('/users', ListComponent);
+    http.expectOne('http://localhost:3000/users').flush(users);
+
+    TestBed.inject(UsersStore).remove(1);
+    http.expectOne('http://localhost:3000/users/1').flush('error', { status: 500, statusText: 'Server Error' });
+    harness.detectChanges();
+
+    expect(harness.routeNativeElement!.querySelector('[role=alert]')?.textContent).toContain('Unable to delete the user');
+    expect(rows().length).toBe(2);
   });
 });

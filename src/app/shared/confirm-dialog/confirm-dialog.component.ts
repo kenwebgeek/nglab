@@ -1,4 +1,4 @@
-import { Component, ElementRef, effect, input, output, viewChild } from '@angular/core';
+import { Component, ElementRef, effect, input, output, signal, untracked, viewChild } from '@angular/core';
 
 @Component({
     selector: 'app-confirm-dialog',
@@ -14,16 +14,16 @@ export class ConfirmDialogComponent {
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();
 
+  readonly closing = signal(false);
+
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  private cancelClose?: () => void;
 
   constructor() {
     effect(() => {
       const dialog = this.dialog().nativeElement;
-      if (this.open() && !dialog.open) {
-        dialog.showModal();
-      } else if (!this.open() && dialog.open) {
-        dialog.close();
-      }
+      const open = this.open();
+      untracked(() => (open ? this.show(dialog) : this.hide(dialog)));
     });
   }
 
@@ -37,5 +37,40 @@ export class ConfirmDialogComponent {
     if (event.target === this.dialog().nativeElement) {
       this.cancelled.emit();
     }
+  }
+
+  private show(dialog: HTMLDialogElement) {
+    // Reopened while the exit animation was still playing
+    this.cancelClose?.();
+    this.closing.set(false);
+    if (!dialog.open) {
+      dialog.showModal();
+    }
+  }
+
+  // Plays the exit animation, then closes the native dialog
+  private hide(dialog: HTMLDialogElement) {
+    if (!dialog.open || this.cancelClose) {
+      return;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      dialog.close();
+      return;
+    }
+
+    const finish = () => {
+      this.cancelClose?.();
+      this.closing.set(false);
+      dialog.close();
+    };
+    // The timeout covers a missed animationend (e.g. a hidden tab)
+    const timeout = setTimeout(finish, 300);
+    dialog.addEventListener('animationend', finish);
+    this.cancelClose = () => {
+      clearTimeout(timeout);
+      dialog.removeEventListener('animationend', finish);
+      this.cancelClose = undefined;
+    };
+    this.closing.set(true);
   }
 }

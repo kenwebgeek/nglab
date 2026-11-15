@@ -27,7 +27,24 @@ describe('ConfirmDialogComponent', () => {
 
     fixture.componentRef.setInput('open', false);
     fixture.detectChanges();
+    expect(dialog.open).toBeTrue();
+    expect(dialog.classList).toContain('animate-dialog-out');
+
+    dialog.dispatchEvent(new Event('animationend'));
     expect(dialog.open).toBeFalse();
+  });
+
+  it('should stay open when reopened during the exit animation', () => {
+    fixture.componentRef.setInput('open', true);
+    fixture.detectChanges();
+    fixture.componentRef.setInput('open', false);
+    fixture.detectChanges();
+    fixture.componentRef.setInput('open', true);
+    fixture.detectChanges();
+
+    dialog.dispatchEvent(new Event('animationend'));
+    expect(dialog.open).toBeTrue();
+    expect(dialog.classList).not.toContain('animate-dialog-out');
   });
 
   it('should emit confirmed and cancelled from its buttons', () => {

@@ -1,4 +1,6 @@
 <app-user-form
   [selectedUser]="user()"
+  [errorMessage]="error()"
   (action)="formAction($event)"
+  (cancelled)="closeForm()"
 ></app-user-form>

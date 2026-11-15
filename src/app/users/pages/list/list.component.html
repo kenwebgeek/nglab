@@ -2,8 +2,14 @@
   [headers]="headers"
   [users]="users()"
   [highlightedUserId]="userToDelete()?.id ?? null"
+  [editingUserId]="editingUserId()"
+  [addedUserId]="newUserId()"
+  [notice]="notice()"
+  (noticeDismissed)="dismissNotice()"
   (user)="selectUser($event)"
 ></app-users-list>
+
+<router-outlet />
 
 <app-confirm-dialog
   [open]="userToDelete() !== null"
