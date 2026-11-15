@@ -7,7 +7,12 @@
     "backend": "json-server --watch db.json",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f db",
+    "db:psql": "docker compose exec db sh -c 'psql -U \"$APP_DB_USER\" -d \"$POSTGRES_DB\"'",
+    "db:reset": "docker compose down -v && docker compose up -d --wait"
   },
   "private": true,
   "dependencies": {
