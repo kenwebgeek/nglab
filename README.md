@@ -11,11 +11,38 @@ This project serves as a front end development playground for me to experiment w
 [TailwindCSS](https://tailwindcss.com/) is used for quick, easy styling of various UI elements.
 
 
-## Development server
+## Getting started
 
-Run `npm run dev:server` to start the json-server mock backend. Dummy data has been added to db.json, but you can change it to suit your needs.
+The app is an Angular front end, an Express and TypeScript API in `server/`, and PostgreSQL 18 running in Docker.
 
-Run `npm start` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+**Prerequisites:** Node.js 22 or newer and Docker with Compose.
+
+1. **Install dependencies:** `npm install` and `npm --prefix server install`.
+2. **Create your secrets.** Neither file is committed.
+   - `cp .env.example .env`, then set `POSTGRES_PASSWORD` and `APP_DB_PASSWORD` to generated values, for example `openssl rand -base64 24 | tr -d '/+='`.
+   - `cp server/.env.example server/.env`, then replace `<APP_DB_PASSWORD>` and `<POSTGRES_PASSWORD>` in the two connection URLs with the same values.
+3. **Start the database:** `npm run db:up`
+4. **Create the tables:** `npm run db:migrate`
+5. **Load the sample users:** `npm run db:seed` imports the users in `db.json` (add `-- --dry-run` to preview first).
+6. **Start the API:** `npm run api` serves `http://localhost:3000`.
+7. **Start the app:** `npm start` serves `http://localhost:4200`. It reloads automatically when you change source files.
+
+### Useful commands
+
+| Command | What it does |
+|---|---|
+| `npm run db:up` / `db:down` | Start or stop the database container. Data is kept in a Docker volume. |
+| `npm run db:reset` | Delete all data and start a fresh database. Run `db:migrate` and `db:seed` again afterwards. |
+| `npm run db:psql` | Open `psql` inside the database container. |
+| `npm run db:generate` | Generate a migration after changing `server/src/db/schema.ts`. Review the SQL before applying it. |
+| `npm run db:migrate` | Apply pending migrations. |
+| `npm run db:seed` | Import `db.json`. It refuses a non-empty table unless you add `-- --upsert`. |
+| `npm run api:test` | Run the API tests against a throwaway database (started automatically on port 5434). |
+| `npm test` | Run the Angular tests. |
+
+`db.json` is only the sample data for `npm run db:seed`; the app does not read or write it. To try the API by hand, open the `server/bruno` folder in [Bruno](https://www.usebruno.com/) and choose the `local` environment.
+
+The migration history and design decisions are in `.docs/postgresql-migration-plan.md`.
 
 ## Build
 

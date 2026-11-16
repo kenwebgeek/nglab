@@ -1,6 +1,6 @@
 # Plan: migrate `db.json` to PostgreSQL
 
-Status: **all decisions made. Phases 1 (Docker Postgres 18), 2 (schema and migrations), 3 (Express API), 4 (`db.json` import), 5 (frontend cutover) and 6 (API tests) are done and verified; Phase 7 (cleanup and docs) is next.**
+Status: **complete. All decisions are made and all seven phases (Docker Postgres 18, schema and migrations, Express API, `db.json` import, frontend cutover, API tests, cleanup) are done and verified. See "Follow-ups" for what is left outside this migration.**
 
 ## What we found
 
@@ -101,10 +101,17 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 - **The tests can fail:** I temporarily broke four behaviors (the 409 mapping, logging the raw error, blank-to-`NULL`, and the sequence reset) and each was caught by the expected tests.
 - The existing Angular tests (54 at the time of writing) are unchanged.
 
-**Phase 7: cleanup and docs.**
-- Remove `json-server` and the `backend` npm script, replaced by `db:up`, `db:migrate`, `db:seed` and `api` scripts.
-- Removing it also clears its remaining audit findings (`morgan`, `path-to-regexp` and similar).
-- Update the README and `.docs`.
+**Phase 7: cleanup and docs. Done.**
+- `json-server` and the `backend` npm script are removed (35 packages left the lockfile, with no version changes), replaced by the `db:up`, `db:migrate`, `db:seed`, `api` and `api:test` scripts. `db.json` stays in the repo as the seed fixture only.
+- **Audit:** removing `json-server` did not change the root `npm audit` total (31 findings: 3 critical, 7 high, 21 moderate, before and after). The earlier expectation that it would clear the `morgan` and `path-to-regexp` findings was out of date. The remaining findings come from the Angular toolchain (`@angular/build`, `@angular/cli`, `vite`, `undici`, and the MCP SDK and its dependencies that the CLI bundles), so they need an Angular or CLI update rather than a change here. `server/` has 0 runtime findings and the 4 known dev-only `drizzle-kit` findings.
+- The README now has setup steps and a command table, and `.github/copilot-instructions.md` describes the Express and Postgres backend instead of `json-server`.
+
+## Follow-ups (not part of this migration)
+- **Duplicate-email message:** the API rejects a duplicate with a 409 and a specific error body, but the Angular store shows only "Unable to add the user. Please try again." Surfacing the reason is a small UI change.
+- **Production API URL:** `src/environments/environment.ts` still points at `http://localhost:3000`; set it when there is a deployed API.
+- **Compiled build for the server:** the API runs through `tsx` today. A `tsc` build and `node dist/index.js` start script would be needed to deploy it.
+- **Angular toolchain audit findings:** see Phase 7.
+- **Auth:** `users` is ready to become the identity table (see Target design); nothing is built yet.
 
 ## Behavior changes to expect
 
