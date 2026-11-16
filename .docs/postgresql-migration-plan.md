@@ -1,10 +1,10 @@
 # Plan: migrate `db.json` to PostgreSQL
 
-Status: **all decisions made. Phases 1 (Docker Postgres 18) and 2 (schema and migrations) are done and verified; Phase 3 (the Express API) is next.**
+Status: **all decisions made. Phases 1 (Docker Postgres 18), 2 (schema and migrations), 3 (Express API) and 4 (`db.json` import) are done and verified; Phase 5 (frontend cutover) is next.**
 
 ## What we found
 
-- **Data:** one collection, `users`, with 10 records. Every record has the same six fields: `id`, `firstName`, `lastName`, `nickname`, `email` and `currentActivity`. There are no duplicate emails or missing values, and the longest value is 29 characters.
+- **Data:** one collection, `users`, with 14 records at the time of the import (10 when this plan was first written). Every record has the same six fields: `id`, `firstName`, `lastName`, `nickname`, `email` and `currentActivity`. There are no duplicate emails or missing values, and the longest value is 29 characters.
 - **Frontend contract:** `src/app/users/services/users.service.ts` calls `http://localhost:3000/users` with `GET`, `POST`, `PUT /:id` and `DELETE /:id`. Ids are numbers.
 - **The create form sends `id: ''`** in the POST body, and the server must ignore it.
 - **Missing piece:** PostgreSQL doesn't serve REST on its own. `json-server` is currently the API, so we need a small backend service between Angular and the database.
@@ -59,7 +59,7 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 - Verified against the Docker database as the app role: constraints, the trigger, SELECT/INSERT/UPDATE/DELETE all work, DDL and TRUNCATE are denied, and a second migrate run applies nothing.
 - **Known audit note:** `npm audit` reports 4 moderate findings in `server/`, all from `drizzle-kit`'s dev-only `@esbuild-kit` chain (an old esbuild dev-server advisory). The suggested fix downgrades `drizzle-kit`, so it was left alone. Revisit when moving to Drizzle 1.0.
 
-**Phase 3: the Express API (replaces `json-server`).** It keeps the exact contract:
+**Phase 3: the Express API (replaces `json-server`). Done.** It keeps the exact contract:
 
 | Request | Behavior |
 |---|---|
@@ -68,18 +68,22 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 | `PUT /users/:id` | The path id wins, and it returns the updated row. |
 | `DELETE /users/:id` | Returns `{}`, or 404 if the id doesn't exist. |
 
-- **Safety:** server-side validation of every field (a schema validator such as Zod, to be chosen in this phase), parameterized queries only (Drizzle does this), and CORS restricted to `http://localhost:4200` instead of allowing any origin. That addresses the earlier review findings about weak input validation and the open CORS setting.
-- **Structure:** routes, a thin users repository on top of Drizzle, and one central error-handling middleware that maps validation, not-found and unique-violation errors to 400, 404 and 409.
-- **Operations:** a `/health` endpoint, and request logging that doesn't print user data (PII).
-- **Port:** it stays on port 3000.
+- **Safety:** Zod validates every field (the same rules as the database CHECKs, accepting the form's `id: ''` and `null` optional fields), queries are parameterized (Drizzle), and CORS is restricted to `http://localhost:4200` instead of allowing any origin. That addresses the earlier review findings about weak input validation and the open CORS setting. The body limit is 10 KB.
+- **Structure:** routes, a thin users repository on top of Drizzle, and one central error-handling middleware that maps errors to 400 (validation, bad id, bad JSON), 404, 409 (duplicate email), 413 and 500. Blank optional fields are stored as `NULL` and returned as `''`.
+- **Operations:** a `/health` endpoint that checks the database, graceful shutdown, and request logging with only method, path (no query string) and status. Error logs never include the raw error, because Drizzle's wrapper message embeds the query parameters (user data).
+- **Port and run:** port 3000 on `127.0.0.1` (override with `PORT`, `HOST`, `CORS_ORIGIN`, `LOG_LEVEL`). Start it with `npm run api`.
+- **Bruno collection:** `server/bruno/` holds a collection in the `.bru` format (it works in every Bruno version). Open that folder in Bruno and select the `local` environment (`baseUrl` is `http://localhost:3000`). It has 10 requests covering health, list, create, duplicate email (409), invalid body (400), update, unknown and invalid ids (404 and 400), and delete (200 and then 404). It creates its own user with a unique email, updates and deletes it, and never touches existing users, so it is safe to run repeatedly. To run it from the terminal without installing anything: `cd server/bruno && npx @usebruno/cli run --env local` (the API must be running).
 
-**Phase 4: import `db.json`.** A one-off, repeatable import script:
-1. Validate the file (duplicates, required fields, trimmed values), with a `--dry-run` mode.
-2. Insert all rows in one transaction, **preserving the existing ids** (`OVERRIDING SYSTEM VALUE`).
-3. Reset the id sequence to `max(id)`, so the next created user doesn't collide.
-4. Verify by comparing the table to the file row by row.
+**Phase 4: import `db.json`. Done.** `npm run db:seed` (add `-- --dry-run` or `-- --upsert`; the options go after the `--`):
+1. Validates the whole file first and lists every problem (invalid fields, duplicate ids, case-insensitive duplicate emails), with a `--dry-run` mode that also reports what would change.
+2. Inserts all rows in one transaction, **preserving the existing ids** (`OVERRIDING SYSTEM VALUE`, written as a parameterized raw insert because Drizzle 0.45 has no public API for it). It runs as the admin role.
+3. Resets the id sequence to `max(id)`, so the next created user doesn't collide.
+4. Verifies by reading the table back and comparing it to the file row by row, plus checking the sequence.
 
-`db.json` is rewritten whenever the app is used against `json-server`, so agree on the 10 committed records as the canonical seed. The local working copy can contain extra test users that were never committed, so import from the committed version. It stays in the repo as the seed fixture.
+- **Safe to re-run:** it refuses a non-empty table unless `--upsert` is given. `--upsert` updates rows with matching ids, inserts the rest and leaves other rows alone, so re-running on identical data changes nothing.
+- **Verified:** after the import, the API's `GET /users` output was identical to the committed `db.json`. A failed import (for example an email clash) rolls back completely and prints a short message.
+
+`db.json` was rewritten whenever the app was used against `json-server`, so the committed version is the canonical seed. It now holds **14** users (the plan originally counted 10), all valid. It stays in the repo as the seed fixture.
 
 **Phase 5: frontend cutover.**
 - **Expected change:** none, since the contract is identical.
@@ -97,7 +101,7 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 
 ## Behavior changes to expect
 
-- **Duplicate emails:** creating a user with an email that already exists will be rejected (409). The frontend currently ignores API errors silently, so the form would just do nothing. A small error message in the UI is needed, treated as a follow-up so this migration stays behavior-neutral.
+- **Duplicate emails:** creating a user with an email that already exists is rejected with a 409. The Angular store now shows a generic error notice ("Unable to add the user. Please try again."), so the user sees a failure but not the reason. A specific "email already exists" message is a small follow-up.
 - **Validation:** the server now enforces the rules (lengths, email format), not just the form.
 - **Stricter ids:** non-numeric ids return 400 or 404 instead of being passed through.
 
