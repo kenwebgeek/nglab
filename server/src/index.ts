@@ -1,0 +1,32 @@
+import { pino } from 'pino';
+import { createApp } from './app.js';
+import { config } from './config.js';
+import { db, pool } from './db/client.js';
+import { createUsersRepository } from './users/repository.js';
+
+const logger = pino({ level: config.logLevel });
+
+const app = createApp({
+  users: createUsersRepository(db),
+  checkDatabase: async () => {
+    await pool.query('select 1');
+  },
+  corsOrigin: config.corsOrigin,
+  logger,
+});
+
+const server = app.listen(config.port, config.host, () => {
+  logger.info({ host: config.host, port: config.port, corsOrigin: config.corsOrigin }, 'API listening');
+});
+
+function shutdown(signal: string) {
+  logger.info({ signal }, 'Shutting down');
+  server.close(() => {
+    pool.end().finally(() => process.exit(0));
+  });
+  // Don't hang on keep-alive connections
+  setTimeout(() => process.exit(1), 10_000).unref();
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

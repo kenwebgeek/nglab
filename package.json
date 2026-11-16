@@ -14,7 +14,8 @@
     "db:psql": "docker compose exec db sh -c 'psql -U \"$APP_DB_USER\" -d \"$POSTGRES_DB\"'",
     "db:reset": "docker compose down -v && docker compose up -d --wait",
     "db:generate": "npm --prefix server run db:generate",
-    "db:migrate": "npm --prefix server run db:migrate"
+    "db:migrate": "npm --prefix server run db:migrate",
+    "api": "npm --prefix server run dev"
   },
   "private": true,
   "dependencies": {
