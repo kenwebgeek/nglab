@@ -1,6 +1,6 @@
 # Plan: migrate `db.json` to PostgreSQL
 
-Status: **all decisions made. Phases 1 (Docker Postgres 18), 2 (schema and migrations), 3 (Express API), 4 (`db.json` import) and 5 (frontend cutover) are done and verified; Phase 6 (API integration tests) is next.**
+Status: **all decisions made. Phases 1 (Docker Postgres 18), 2 (schema and migrations), 3 (Express API), 4 (`db.json` import), 5 (frontend cutover) and 6 (API tests) are done and verified; Phase 7 (cleanup and docs) is next.**
 
 ## What we found
 
@@ -90,9 +90,16 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 - **Verified in the browser** against Express and Postgres (using a test user, with the 14 seed users untouched): the list loads from the database, creating a user (blank optional fields) works and the database assigns the id, editing works including a direct visit to `/users/manage/:id` after a full page load, a duplicate email with different case is rejected (409) and shows the store's generic error notice, and deleting shows the confirmation prompt and highlighted row, removing the row only after confirming. The 54 unit tests and both build configurations pass.
 - **Ids have gaps:** the identity sequence advances even for rejected inserts (such as the 409 above), so ids are unique but not contiguous.
 
-**Phase 6: tests.**
-- Integration tests for the API run against a real, throwaway Postgres (not mocks), covering CRUD, validation, duplicate emails, 404s and id handling. The test runner (for example Vitest) and how the throwaway database is started (a second Compose service or a test container) are chosen in this phase.
-- The existing Angular tests (41 at the time of writing) shouldn't need changes.
+**Phase 6: tests. Done.** Run them with `npm run api:test` (starts the test database, then runs Vitest in `server/`).
+- **Throwaway database:** a second Compose service, `db-test`, behind the `test` profile so `npm run db:up` never starts it. It uses the same image and init script as the real database (so the roles and privileges match), keeps its data in memory (`tmpfs`) and runs with `fsync` off. It listens on `127.0.0.1:5434` (`TEST_DB_PORT`). Start and remove it with `npm run db:test:up` and `npm run db:test:down`. Testcontainers was not needed.
+- **Runner:** Vitest (pinned, dev-only; it adds no new audit findings), with Node's built-in `fetch` instead of supertest. Files run serially because they share one database. Global setup applies the real committed migrations, so the migration files are tested too.
+- **Safety:** the tests truncate tables, so they derive their connection from your dev credentials but force `TEST_DB_PORT`, refuse any non-local host, and refuse to run if `TEST_DB_PORT` equals the development database's port.
+- **What is covered (84 tests):**
+  - API (`users.api.test.ts`): every endpoint, validation (10 invalid-body cases), duplicate emails (409, case-insensitive, on create and update), id handling (path id wins, body id ignored, invalid ids), 404s, malformed JSON and oversize bodies, CORS, health, and logs that contain no user data, including a forced database failure (Drizzle's error message embeds the query parameters).
+  - Database (`db.constraints.test.ts`), as the app role: identity ids, the unique email, every CHECK, NOT NULL, the `updated_at` trigger and the app role's privileges (DDL and `TRUNCATE` denied).
+  - Import (`seed.test.ts`): the seed validation, and the real `db:seed` script run against the test database (id preservation, sequence reset, `--dry-run`, `--upsert`, rollback).
+- **The tests can fail:** I temporarily broke four behaviors (the 409 mapping, logging the raw error, blank-to-`NULL`, and the sequence reset) and each was caught by the expected tests.
+- The existing Angular tests (54 at the time of writing) are unchanged.
 
 **Phase 7: cleanup and docs.**
 - Remove `json-server` and the `backend` npm script, replaced by `db:up`, `db:migrate`, `db:seed` and `api` scripts.

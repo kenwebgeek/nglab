@@ -16,6 +16,9 @@
     "db:generate": "npm --prefix server run db:generate",
     "db:migrate": "npm --prefix server run db:migrate",
     "db:seed": "npm --prefix server run db:seed --",
+    "db:test:up": "docker compose up -d --wait db-test",
+    "db:test:down": "docker compose rm -sf db-test",
+    "api:test": "npm run db:test:up && npm --prefix server run test",
     "api": "npm --prefix server run dev"
   },
   "private": true,
