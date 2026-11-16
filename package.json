@@ -15,6 +15,7 @@
     "db:reset": "docker compose down -v && docker compose up -d --wait",
     "db:generate": "npm --prefix server run db:generate",
     "db:migrate": "npm --prefix server run db:migrate",
+    "db:seed": "npm --prefix server run db:seed --",
     "api": "npm --prefix server run dev"
   },
   "private": true,
