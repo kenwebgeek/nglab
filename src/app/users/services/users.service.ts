@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { User } from '../models/user.interface';
 import { Observable, catchError, tap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +10,7 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 export class UsersService {
   private readonly http = inject(HttpClient);
 
-  baseApi = 'http://localhost:3000';
+  baseApi = environment.apiUrl;
 
   // POST data
   addUser(user: User) {

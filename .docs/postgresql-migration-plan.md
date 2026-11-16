@@ -1,6 +1,6 @@
 # Plan: migrate `db.json` to PostgreSQL
 
-Status: **all decisions made. Phases 1 (Docker Postgres 18), 2 (schema and migrations), 3 (Express API) and 4 (`db.json` import) are done and verified; Phase 5 (frontend cutover) is next.**
+Status: **all decisions made. Phases 1 (Docker Postgres 18), 2 (schema and migrations), 3 (Express API), 4 (`db.json` import) and 5 (frontend cutover) are done and verified; Phase 6 (API integration tests) is next.**
 
 ## What we found
 
@@ -85,10 +85,10 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 
 `db.json` was rewritten whenever the app was used against `json-server`, so the committed version is the canonical seed. It now holds **14** users (the plan originally counted 10), all valid. It stays in the repo as the seed fixture.
 
-**Phase 5: frontend cutover.**
-- **Expected change:** none, since the contract is identical.
-- **Optional (recommended):** move the hardcoded base URL in `users.service.ts` to an environment config. That also clears the "hardcoded HTTP URL" review finding.
-- **Verify:** the full create, edit, delete and direct-visit flow against the real database.
+**Phase 5: frontend cutover. Done.**
+- **Change:** the API URL moved out of `users.service.ts` into environment files generated with `ng generate environments` (`src/environments/environment.ts` and `environment.development.ts`, each with `apiUrl`, plus a development `fileReplacements` entry in `angular.json`). The contract was identical, so nothing else changed. The production file still points at `http://localhost:3000` because there is no deployed API yet; set it before building for a real host.
+- **Verified in the browser** against Express and Postgres (using a test user, with the 14 seed users untouched): the list loads from the database, creating a user (blank optional fields) works and the database assigns the id, editing works including a direct visit to `/users/manage/:id` after a full page load, a duplicate email with different case is rejected (409) and shows the store's generic error notice, and deleting shows the confirmation prompt and highlighted row, removing the row only after confirming. The 54 unit tests and both build configurations pass.
+- **Ids have gaps:** the identity sequence advances even for rejected inserts (such as the 409 above), so ids are unique but not contiguous.
 
 **Phase 6: tests.**
 - Integration tests for the API run against a real, throwaway Postgres (not mocks), covering CRUD, validation, duplicate emails, 404s and id handling. The test runner (for example Vitest) and how the throwaway database is started (a second Compose service or a test container) are chosen in this phase.
