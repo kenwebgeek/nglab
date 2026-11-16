@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794791027815,
+      "tag": "0000_enable_citext",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794791039836,
+      "tag": "0001_create_users",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794791053201,
+      "tag": "0002_users_updated_at_trigger",
+      "breakpoints": true
+    }
+  ]
+}

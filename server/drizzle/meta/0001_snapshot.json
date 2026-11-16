@@ -1,0 +1,122 @@
+{
+  "id": "e694397e-43c3-4d95-9eb7-b175f1769ab9",
+  "prevId": "2bbf80c2-0d82-4618-8785-7ff75532f76e",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "users_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nickname": {
+          "name": "nickname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "citext",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "current_activity": {
+          "name": "current_activity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "users_first_name_length": {
+          "name": "users_first_name_length",
+          "value": "char_length(btrim(\"users\".\"first_name\")) between 2 and 100"
+        },
+        "users_last_name_length": {
+          "name": "users_last_name_length",
+          "value": "char_length(btrim(\"users\".\"last_name\")) between 2 and 100"
+        },
+        "users_nickname_length": {
+          "name": "users_nickname_length",
+          "value": "char_length(btrim(\"users\".\"nickname\")) between 1 and 100"
+        },
+        "users_current_activity_length": {
+          "name": "users_current_activity_length",
+          "value": "char_length(btrim(\"users\".\"current_activity\")) between 1 and 200"
+        },
+        "users_email_length": {
+          "name": "users_email_length",
+          "value": "char_length(\"users\".\"email\") between 3 and 254"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
