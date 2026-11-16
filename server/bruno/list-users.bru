@@ -1,0 +1,32 @@
+meta {
+  name: List users
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/users
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns an array ordered by id", function () {
+    const users = res.getBody();
+    expect(users).to.be.an("array");
+    const ids = users.map((user) => user.id);
+    expect(ids).to.deep.equal([...ids].sort((a, b) => a - b));
+  });
+
+  test("every user has the frontend's fields, with blanks as empty strings", function () {
+    for (const user of res.getBody()) {
+      expect(user).to.have.all.keys("id", "firstName", "lastName", "nickname", "email", "currentActivity");
+      expect(user.nickname).to.be.a("string");
+      expect(user.currentActivity).to.be.a("string");
+    }
+  });
+}

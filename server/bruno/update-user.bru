@@ -1,0 +1,38 @@
+meta {
+  name: Update user
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/users/{{userId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": 1,
+    "firstName": "Ada",
+    "lastName": "King",
+    "nickname": "Countess",
+    "email": "{{email}}",
+    "currentActivity": ""
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.lastName: eq King
+  res.body.nickname: eq Countess
+}
+
+tests {
+  test("the path id wins over the id in the body", function () {
+    expect(res.getBody().id).to.equal(bru.getVar("userId"));
+  });
+}
+
+docs {
+  PUT replaces the whole user, so every field is sent. The body's `id: 1` is deliberately wrong.
+}

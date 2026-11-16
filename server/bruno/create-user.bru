@@ -1,0 +1,53 @@
+meta {
+  name: Create user
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "",
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "nickname": null,
+    "email": "{{email}}",
+    "currentActivity": "Writing the first program"
+  }
+}
+
+script:pre-request {
+  // A unique email per run, so reruns never clash (and a failed run can't poison the next one)
+  const email = `bruno-${Date.now()}@example.com`;
+  bru.setVar("email", email);
+  bru.setVar("emailUpper", email.toUpperCase());
+}
+
+vars:post-response {
+  userId: res.body.id
+}
+
+assert {
+  res.status: eq 201
+}
+
+tests {
+  test("the database assigns the id (the body's id is ignored)", function () {
+    expect(res.getBody().id).to.be.a("number");
+  });
+
+  test("a null nickname comes back as an empty string", function () {
+    expect(res.getBody().nickname).to.equal("");
+  });
+}
+
+docs {
+  Sends the same shape the Angular form does: `id: ""` and a `null` optional field.
+  Saves the new user's id as `userId` for the requests that follow, which update and delete it.
+  Your existing users are never touched.
+}

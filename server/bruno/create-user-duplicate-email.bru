@@ -1,0 +1,28 @@
+meta {
+  name: Create user - duplicate email
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstName": "Ada",
+    "lastName": "Clone",
+    "email": "{{emailUpper}}"
+  }
+}
+
+assert {
+  res.status: eq 409
+  res.body.error: eq email_taken
+}
+
+docs {
+  The email is the one just created, upper-cased: uniqueness is case-insensitive.
+}

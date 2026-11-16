@@ -1,0 +1,31 @@
+meta {
+  name: Create user - invalid body
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstName": "A",
+    "lastName": "",
+    "email": "not-an-email"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: eq validation_error
+}
+
+tests {
+  test("reports one issue per invalid field", function () {
+    const fields = res.getBody().issues.map((issue) => issue.field);
+    expect(fields).to.include.members(["firstName", "lastName", "email"]);
+  });
+}

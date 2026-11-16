@@ -1,0 +1,25 @@
+meta {
+  name: Delete user
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{baseUrl}}/users/{{userId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns an empty object", function () {
+    expect(res.getBody()).to.deep.equal({});
+  });
+}
+
+docs {
+  Deletes the user created by "Create user", so the collection leaves no data behind.
+}
