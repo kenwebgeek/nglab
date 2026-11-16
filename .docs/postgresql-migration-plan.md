@@ -1,11 +1,11 @@
 # Plan: migrate `db.json` to PostgreSQL
 
-Status: **complete. All decisions are made and all seven phases (Docker Postgres 18, schema and migrations, Express API, `db.json` import, frontend cutover, API tests, cleanup) are done and verified. See "Follow-ups" for what is left outside this migration.**
+Status: **complete. All decisions are made and all seven phases (Docker Postgres 18, schema and migrations, Express API, `db.json` import, frontend cutover, API tests, cleanup) are done and verified. See "Follow-ups" for what is left outside this migration.** After the migration, the Angular app moved from the repo root into `client/` (to mirror `server/`); frontend paths in this document are written with that prefix.
 
 ## What we found
 
 - **Data:** one collection, `users`, with 14 records at the time of the import (10 when this plan was first written). Every record has the same six fields: `id`, `firstName`, `lastName`, `nickname`, `email` and `currentActivity`. There are no duplicate emails or missing values, and the longest value is 29 characters.
-- **Frontend contract:** `src/app/users/services/users.service.ts` calls `http://localhost:3000/users` with `GET`, `POST`, `PUT /:id` and `DELETE /:id`. Ids are numbers.
+- **Frontend contract:** `client/src/app/users/services/users.service.ts` calls `http://localhost:3000/users` with `GET`, `POST`, `PUT /:id` and `DELETE /:id`. Ids are numbers.
 - **The create form sends `id: ''`** in the POST body, and the server must ignore it.
 - **Missing piece:** PostgreSQL doesn't serve REST on its own. `json-server` is currently the API, so we need a small backend service between Angular and the database.
 - **Local environment:**
@@ -86,7 +86,7 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 `db.json` was rewritten whenever the app was used against `json-server`, so the committed version is the canonical seed. It now holds **14** users (the plan originally counted 10), all valid. It stays in the repo as the seed fixture.
 
 **Phase 5: frontend cutover. Done.**
-- **Change:** the API URL moved out of `users.service.ts` into environment files generated with `ng generate environments` (`src/environments/environment.ts` and `environment.development.ts`, each with `apiUrl`, plus a development `fileReplacements` entry in `angular.json`). The contract was identical, so nothing else changed. The production file still points at `http://localhost:3000` because there is no deployed API yet; set it before building for a real host.
+- **Change:** the API URL moved out of `users.service.ts` into environment files generated with `ng generate environments` (`client/src/environments/environment.ts` and `environment.development.ts`, each with `apiUrl`, plus a development `fileReplacements` entry in `angular.json`). The contract was identical, so nothing else changed. The production file still points at `http://localhost:3000` because there is no deployed API yet; set it before building for a real host.
 - **Verified in the browser** against Express and Postgres (using a test user, with the 14 seed users untouched): the list loads from the database, creating a user (blank optional fields) works and the database assigns the id, editing works including a direct visit to `/users/manage/:id` after a full page load, a duplicate email with different case is rejected (409) and shows the store's generic error notice, and deleting shows the confirmation prompt and highlighted row, removing the row only after confirming. The 54 unit tests and both build configurations pass.
 - **Ids have gaps:** the identity sequence advances even for rejected inserts (such as the 409 above), so ids are unique but not contiguous.
 
@@ -108,7 +108,7 @@ Each phase ends with a check and a pause for review, as in the Angular migration
 
 ## Follow-ups (not part of this migration)
 - **Duplicate-email message:** the API rejects a duplicate with a 409 and a specific error body, but the Angular store shows only "Unable to add the user. Please try again." Surfacing the reason is a small UI change.
-- **Production API URL:** `src/environments/environment.ts` still points at `http://localhost:3000`; set it when there is a deployed API.
+- **Production API URL:** `client/src/environments/environment.ts` still points at `http://localhost:3000`; set it when there is a deployed API.
 - **Compiled build for the server:** the API runs through `tsx` today. A `tsc` build and `node dist/index.js` start script would be needed to deploy it.
 - **Angular toolchain audit findings:** see Phase 7.
 - **Auth:** `users` is ready to become the identity table (see Target design); nothing is built yet.

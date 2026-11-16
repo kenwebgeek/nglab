@@ -1,14 +1,14 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # Compiled output
-/dist
+/client/dist
 /server/dist
 /tmp
 /out-tsc
 /bazel-out
 
 # Node
-/node_modules
+/client/node_modules
 /server/node_modules
 npm-debug.log
 yarn-error.log
@@ -33,10 +33,10 @@ yarn-error.log
 # Miscellaneous
 db-local.json
 /15.2.4/
-/.angular/cache
+/client/.angular/cache
 .sass-cache/
 /connect.lock
-/coverage
+/client/coverage
 /libpeerconnection.log
 testem.log
 /typings

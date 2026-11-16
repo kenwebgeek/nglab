@@ -13,11 +13,19 @@ This project serves as a front end development playground for me to experiment w
 
 ## Getting started
 
-The app is an Angular front end, an Express and TypeScript API in `server/`, and PostgreSQL 18 running in Docker.
+The app has three parts:
+
+| Folder | What it is |
+|---|---|
+| `client/` | The Angular app (its own `package.json`, `angular.json` and `node_modules`). |
+| `server/` | The Express and TypeScript API, with its Drizzle migrations, tests and Bruno collection. |
+| repo root | PostgreSQL 18 in Docker (`docker-compose.yml`, `db/`), the `db.json` sample data, the docs, and a small `package.json` whose scripts run everything from one place. |
+
+Run all the commands below from the repo root. The root scripts (`npm start`, `npm run build`, `npm test`, `npm run ng -- ...`) forward to `client/`, so `npm test -- --watch=false` works as before. To use the Angular CLI directly, `cd client` first.
 
 **Prerequisites:** Node.js 22 or newer and Docker with Compose.
 
-1. **Install dependencies:** `npm install` and `npm --prefix server install`.
+1. **Install dependencies:** `npm run install:all` (installs `client/` and `server/`).
 2. **Create your secrets.** Neither file is committed.
    - `cp .env.example .env`, then set `POSTGRES_PASSWORD` and `APP_DB_PASSWORD` to generated values, for example `openssl rand -base64 24 | tr -d '/+='`.
    - `cp server/.env.example server/.env`, then replace `<APP_DB_PASSWORD>` and `<POSTGRES_PASSWORD>` in the two connection URLs with the same values.
@@ -46,4 +54,4 @@ The migration history and design decisions are in `.docs/postgresql-migration-pl
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Run `npm run build` to build the Angular app. The build artifacts are stored in `client/dist/`.

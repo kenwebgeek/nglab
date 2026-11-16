@@ -1,12 +1,16 @@
 {
-  "name": "ng-lab",
+  "name": "ng-lab-workspace",
   "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
+    "install:all": "npm --prefix client install && npm --prefix server install",
+    "ng": "npm --prefix client run ng --",
+    "start": "npm --prefix client start --",
+    "build": "npm --prefix client run build --",
+    "watch": "npm --prefix client run watch --",
+    "test": "npm --prefix client test --",
+    "api": "npm --prefix server run dev",
+    "api:test": "npm run db:test:up && npm --prefix server run test",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f db",
@@ -16,38 +20,6 @@
     "db:migrate": "npm --prefix server run db:migrate",
     "db:seed": "npm --prefix server run db:seed --",
     "db:test:up": "docker compose up -d --wait db-test",
-    "db:test:down": "docker compose rm -sf db-test",
-    "api:test": "npm run db:test:up && npm --prefix server run test",
-    "api": "npm --prefix server run dev"
-  },
-  "private": true,
-  "dependencies": {
-    "@angular/cdk": "^21.2.14",
-    "@angular/common": "^21.2.25",
-    "@angular/compiler": "^21.2.25",
-    "@angular/core": "^21.2.25",
-    "@angular/forms": "^21.2.25",
-    "@angular/material": "^21.2.14",
-    "@angular/platform-browser": "^21.2.25",
-    "@angular/router": "^21.2.25",
-    "rxjs": "~7.5.0",
-    "tslib": "^2.3.0"
-  },
-  "devDependencies": {
-    "@angular/build": "^21.2.24",
-    "@angular/cli": "~21.2.24",
-    "@angular/compiler-cli": "^21.2.25",
-    "@tailwindcss/forms": "^0.5.7",
-    "@types/jasmine": "~4.3.0",
-    "autoprefixer": "^10.4.14",
-    "jasmine-core": "~4.5.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.1.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.0.0",
-    "postcss": "^8.4.21",
-    "tailwindcss": "^3.2.7",
-    "typescript": "~5.9.3"
+    "db:test:down": "docker compose rm -sf db-test"
   }
 }
