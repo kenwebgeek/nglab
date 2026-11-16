@@ -25,20 +25,20 @@ Run all the commands below from the repo root. The root scripts (`npm start`, `n
 
 **Prerequisites:** Node.js 22 or newer and Docker with Compose.
 
-1. **Install dependencies:** `npm run install:all` (installs `client/` and `server/`).
+1. **Install dependencies:** `npm run install:all` (installs the root, `client/` and `server/`).
 2. **Create your secrets.** Neither file is committed.
    - `cp .env.example .env`, then set `POSTGRES_PASSWORD` and `APP_DB_PASSWORD` to generated values, for example `openssl rand -base64 24 | tr -d '/+='`.
    - `cp server/.env.example server/.env`, then replace `<APP_DB_PASSWORD>` and `<POSTGRES_PASSWORD>` in the two connection URLs with the same values.
 3. **Start the database:** `npm run db:up`
 4. **Create the tables:** `npm run db:migrate`
 5. **Load the sample users:** `npm run db:seed` imports the users in `db.json` (add `-- --dry-run` to preview first).
-6. **Start the API:** `npm run api` serves `http://localhost:3000`.
-7. **Start the app:** `npm start` serves `http://localhost:4200`. It reloads automatically when you change source files.
+6. **Start everything:** `npm run dev` starts the database (if it isn't running), the API at `http://localhost:3000` and the app at `http://localhost:4200` together, with colored `[api]` and `[client]` log prefixes. Press Ctrl+C once to stop both. To run them separately, use `npm run api` and `npm start` in two terminals.
 
 ### Useful commands
 
 | Command | What it does |
 |---|---|
+| `npm run dev` | Start the database, the API and the app together. Both reload when you change source files. |
 | `npm run db:up` / `db:down` | Start or stop the database container. Data is kept in a Docker volume. |
 | `npm run db:reset` | Delete all data and start a fresh database. Run `db:migrate` and `db:seed` again afterwards. |
 | `npm run db:psql` | Open `psql` inside the database container. |

@@ -15,7 +15,12 @@ const app = createApp({
   logger,
 });
 
-const server = app.listen(config.port, config.host, () => {
+// Express 5 also passes startup failures (for example EADDRINUSE) to this callback
+const server = app.listen(config.port, config.host, (error?: Error) => {
+  if (error) {
+    logger.error({ err: error.message, port: config.port }, 'API failed to start');
+    process.exit(1);
+  }
   logger.info({ host: config.host, port: config.port, corsOrigin: config.corsOrigin }, 'API listening');
 });
 

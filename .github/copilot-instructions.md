@@ -4,7 +4,7 @@
 
 - The repository has three parts: `client/` (the Angular app, with its own `package.json`, `angular.json` and `node_modules`), `server/` (the API, a separate npm project) and the repo root (Docker Compose, `db/`, `db.json`, docs and a `package.json` of forwarding scripts). Run commands from the root; the Angular CLI itself must run inside `client/` (use `npm run ng -- ...` from the root).
 - Use the repository-local Angular CLI through npm scripts:
-  - `npm start` starts the Angular development server at `http://localhost:4200`.
+  - `npm run dev` starts the database, the API and the Angular app together (`concurrently`, in the root `package.json`); `npm start` starts only the Angular development server at `http://localhost:4200`.
   - `npm run db:up` starts PostgreSQL (Docker Compose), `npm run db:migrate` applies the migrations and `npm run db:seed` imports `db.json`; `npm run api` starts the Express API at `http://localhost:3000`. First-time setup needs `npm run install:all` plus `.env` and `server/.env` (copy the `.env.example` files and set the passwords); see the README.
   - `npm run build` produces the default production build in `client/dist/ng-lab/browser`.
   - `npm run watch` builds continuously with the development configuration.
