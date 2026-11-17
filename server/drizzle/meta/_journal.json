@@ -22,6 +22,27 @@
       "when": 1794791053201,
       "tag": "0002_users_updated_at_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794876977798,
+      "tag": "0003_create_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794876978363,
+      "tag": "0004_accounts_updated_at_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794877975930,
+      "tag": "0005_recreate_accounts_for_users",
+      "breakpoints": true
     }
   ]
 }

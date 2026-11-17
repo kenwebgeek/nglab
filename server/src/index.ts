@@ -2,12 +2,14 @@ import { pino } from 'pino';
 import { createApp } from './app.js';
 import { config } from './config.js';
 import { db, pool } from './db/client.js';
+import { createAccountsRepository } from './accounts/repository.js';
 import { createUsersRepository } from './users/repository.js';
 
 const logger = pino({ level: config.logLevel });
 
 const app = createApp({
   users: createUsersRepository(db),
+  accounts: createAccountsRepository(db),
   checkDatabase: async () => {
     await pool.query('select 1');
   },

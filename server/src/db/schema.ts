@@ -34,3 +34,20 @@ export const users = pgTable(
 
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;
+
+// Login credentials. The profile (email, names, nickname) lives in `users`, and the email is the username.
+export const accounts = pgTable(
+  'accounts',
+  {
+    userId: integer('user_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // Self-describing scrypt hash (see accounts/password.ts); never the password itself
+    passwordHash: text('password_hash').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [check('accounts_password_hash_not_empty', sql`char_length(${table.passwordHash}) > 0`)],
+);
+
+export type AccountRow = typeof accounts.$inferSelect;

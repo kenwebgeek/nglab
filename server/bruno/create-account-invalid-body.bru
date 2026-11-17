@@ -1,0 +1,32 @@
+meta {
+  name: Create account - invalid body
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/accounts
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "not-an-email",
+    "password": "short",
+    "firstName": "A",
+    "lastName": ""
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: eq validation_error
+}
+
+tests {
+  test("reports one issue per invalid field", function () {
+    const fields = res.getBody().issues.map((issue) => issue.field);
+    expect(fields).to.have.members(["email", "password", "firstName", "lastName"]);
+  });
+}

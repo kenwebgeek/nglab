@@ -82,6 +82,41 @@ describe('users table constraints', () => {
   });
 });
 
+describe('accounts table constraints', () => {
+  const insertUser = async (email = 'ada@example.com') => (await insert('Ada', 'Lovelace', email)).rows[0].id as number;
+  const insertAccount = (userId: number, hash = 'scrypt$hash') =>
+    app.query('insert into accounts (user_id, password_hash) values ($1, $2) returning *', [userId, hash]);
+
+  it('allows one account per user', async () => {
+    const id = await insertUser();
+    await insertAccount(id);
+    expect(await pgError(insertAccount(id))).toMatchObject({ code: '23505', constraint: 'accounts_pkey' });
+  });
+
+  it('requires an existing user', async () => {
+    expect(await pgError(insertAccount(999))).toMatchObject({ code: '23503', constraint: 'accounts_user_id_users_id_fk' });
+  });
+
+  it('rejects an empty password hash with a CHECK violation', async () => {
+    const id = await insertUser();
+    expect(await pgError(insertAccount(id, ''))).toMatchObject({ code: '23514', constraint: 'accounts_password_hash_not_empty' });
+  });
+
+  it('is deleted together with its user', async () => {
+    const id = await insertUser();
+    await insertAccount(id);
+    await app.query('delete from users where id = $1', [id]);
+    expect((await app.query('select 1 from accounts')).rowCount).toBe(0);
+  });
+
+  it('advances updated_at on UPDATE', async () => {
+    const { rows } = await insertAccount(await insertUser());
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    const updated = await app.query("update accounts set password_hash = 'scrypt$new' where user_id = $1 returning updated_at", [rows[0].user_id]);
+    expect(updated.rows[0].updated_at.getTime()).toBeGreaterThan(rows[0].updated_at.getTime());
+  });
+});
+
 describe('updated_at trigger', () => {
   it('advances updated_at on UPDATE and leaves created_at alone', async () => {
     const { rows } = await insert('Tony', 'Stark', 'tony@avengers.com');

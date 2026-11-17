@@ -1,0 +1,27 @@
+<section
+  aria-labelledby="signup-heading"
+  class="flex w-full max-w-[480px] flex-col gap-7 rounded-[14px] border border-solid border-[#e2e8f0] bg-white
+  p-6 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:p-10 dark:border-[#2c3850] dark:bg-[#131c2d]"
+>
+  <div class="flex flex-col gap-2">
+    <p class="m-0 text-[11px] font-semibold uppercase leading-[1.5] tracking-[0.08em] text-[#4f46e5] dark:text-[#a99aff]">
+      Workspace access
+    </p>
+    <h1 id="signup-heading" class="m-0 text-[30px] font-semibold leading-[1.2] text-[#172033] dark:text-[#f3f5fc]">
+      Create your account
+    </h1>
+    <p class="m-0 text-sm leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">Enter your details to create your account.</p>
+  </div>
+
+  <app-signup-form
+    [submitting]="store.submitting()"
+    [errorMessage]="store.error()"
+    (submitted)="store.signUp($event)"
+    (errorDismissed)="store.dismissError()"
+  />
+</section>
+
+<p class="m-0 flex gap-[6px] text-sm leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+  Already have an account?
+  <a routerLink="/login" class="font-semibold text-[#4f46e5] no-underline hover:underline dark:text-[#a99aff]">Log in</a>
+</p>

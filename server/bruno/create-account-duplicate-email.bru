@@ -1,0 +1,29 @@
+meta {
+  name: Create account - duplicate email
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/accounts
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "ADA@EXAMPLE.COM",
+    "password": "correct horse battery",
+    "firstName": "Ada",
+    "lastName": "Clone"
+  }
+}
+
+assert {
+  res.status: eq 409
+  res.body.error: eq email_taken
+}
+
+docs {
+  Uniqueness is case-insensitive. Run "Create account" first.
+}

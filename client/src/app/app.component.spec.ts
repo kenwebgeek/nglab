@@ -1,14 +1,13 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AppComponent } from './app.component';
+import { ThemeStore } from './shared/theme/theme.store';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 
@@ -24,28 +23,20 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('Angular Lab');
   });
 
-  it('should toggle the dark class when the breadcrumb bar toggle is clicked', () => {
+  it('should follow the theme store with the dark class on the root element', () => {
     const fixture = TestBed.createComponent(AppComponent);
+    const theme = TestBed.inject(ThemeStore);
     fixture.detectChanges();
     const root = (fixture.nativeElement as HTMLElement).firstElementChild as HTMLElement;
-    const toggle = (fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Toggle dark mode"]') as HTMLButtonElement;
 
     expect(root.classList.contains('dark')).toBeFalse();
 
-    toggle.click();
+    theme.toggle();
     fixture.detectChanges();
     expect(root.classList.contains('dark')).toBeTrue();
 
-    toggle.click();
+    theme.toggle();
     fixture.detectChanges();
     expect(root.classList.contains('dark')).toBeFalse();
-  });
-
-  it('should render the sidebar and breadcrumb bar', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('app-sidebar')).toBeTruthy();
-    expect(compiled.querySelector('app-breadcrumb-bar')).toBeTruthy();
   });
 });

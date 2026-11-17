@@ -1,0 +1,37 @@
+meta {
+  name: Create account
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/accounts
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "ada@example.com",
+    "password": "correct horse battery",
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "nickname": "Countess"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.email: eq ada@example.com
+  res.body.firstName: eq Ada
+}
+
+tests {
+  test("never returns the password or its hash", function () {
+    expect(res.getBody()).to.not.have.any.keys("password", "passwordHash", "password_hash");
+  });
+}
+
+docs {
+  Also creates the user, so it shows up in "List users". Run once per database: a second run is a 409 (see "Create account - duplicate email").
+}

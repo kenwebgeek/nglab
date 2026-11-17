@@ -31,7 +31,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
 
   const pgError = unwrapPgError(err);
   if (pgError?.code === '23505' && pgError.constraint === 'users_email_unique') {
-    res.status(409).json({ error: 'email_taken', message: 'A user with this email already exists' });
+    res.status(409).json({ error: 'email_taken', message: 'This email is already registered' });
     return;
   }
   // Safety net: the schema validation should make these unreachable

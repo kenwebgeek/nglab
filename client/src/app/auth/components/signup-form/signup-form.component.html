@@ -1,0 +1,189 @@
+<form [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate class="flex flex-col gap-6">
+  @if (errorMessage(); as error) {
+    <app-alerts
+      animate.leave="animate-alert-out motion-reduce:animate-none"
+      alert="error"
+      [message]="error"
+      (dismissed)="errorDismissed.emit()"
+    />
+  }
+
+  <div class="flex flex-col gap-2">
+    <label for="email" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+      Email
+      <span class="text-[#4f46e5] dark:text-[#a99aff]" aria-hidden="true">*</span>
+    </label>
+    <input
+      id="email"
+      formControlName="email"
+      type="email"
+      autocomplete="email"
+      placeholder="name@company.com"
+      aria-required="true"
+      [attr.aria-invalid]="showError('email')"
+      [attr.aria-describedby]="showError('email') ? 'email-hint email-error' : 'email-hint'"
+      class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+      text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+      focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
+      dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
+      dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
+    />
+    <p id="email-hint" class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">Your email is your username.</p>
+    @if (showError('email')) {
+      <p id="email-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+        @if (email.errors?.['required']) {
+          Email is required
+        } @else {
+          Enter a valid email address
+        }
+      </p>
+    }
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <label for="password" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+      Password
+      <span class="text-[#4f46e5] dark:text-[#a99aff]" aria-hidden="true">*</span>
+    </label>
+    <div
+      class="flex h-12 items-center rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px]
+      focus-within:border-[#4f46e5] focus-within:ring-1 focus-within:ring-[#4f46e5]
+      has-[[aria-invalid=true]]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
+      dark:focus-within:border-[#8064f3] dark:focus-within:ring-[#8064f3] dark:has-[[aria-invalid=true]]:border-red-400"
+    >
+      <input
+        id="password"
+        formControlName="password"
+        [type]="showPassword() ? 'text' : 'password'"
+        autocomplete="new-password"
+        placeholder="Create a password"
+        aria-required="true"
+        [attr.aria-invalid]="showError('password')"
+        [attr.aria-describedby]="showError('password') ? 'password-error' : null"
+        class="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#172033]
+        placeholder:text-[#64748b] focus:outline-none focus:ring-0 dark:text-[#f3f5fc]
+        dark:placeholder:text-[#748299]"
+      />
+      <button
+        type="button"
+        (click)="toggleShowPassword()"
+        aria-controls="password"
+        class="cursor-pointer border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5]
+        hover:underline dark:text-[#a99aff]"
+      >
+        {{ showPassword() ? 'Hide' : 'Show' }}
+      </button>
+    </div>
+    @if (showError('password')) {
+      <p id="password-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+        @if (password.errors?.['required']) {
+          Password is required
+        } @else if (password.errors?.['minlength']) {
+          Password must be at least {{ passwordMinLength }} characters
+        } @else {
+          Password must be at most 128 characters
+        }
+      </p>
+    }
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <label for="firstName" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+      First name
+      <span class="text-[#4f46e5] dark:text-[#a99aff]" aria-hidden="true">*</span>
+    </label>
+    <input
+      id="firstName"
+      formControlName="firstName"
+      type="text"
+      autocomplete="given-name"
+      placeholder="Enter your first name"
+      aria-required="true"
+      [attr.aria-invalid]="showError('firstName')"
+      [attr.aria-describedby]="showError('firstName') ? 'firstName-error' : null"
+      class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+      text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+      focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
+      dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
+      dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
+    />
+    @if (showError('firstName')) {
+      <p id="firstName-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+        @if (firstName.errors?.['required']) {
+          First name is required
+        } @else if (firstName.errors?.['minlength']) {
+          First name must be at least {{ nameMinLength }} characters
+        } @else {
+          First name must be at most {{ nameMaxLength }} characters
+        }
+      </p>
+    }
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <label for="lastName" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+      Last name
+      <span class="text-[#4f46e5] dark:text-[#a99aff]" aria-hidden="true">*</span>
+    </label>
+    <input
+      id="lastName"
+      formControlName="lastName"
+      type="text"
+      autocomplete="family-name"
+      placeholder="Enter your last name"
+      aria-required="true"
+      [attr.aria-invalid]="showError('lastName')"
+      [attr.aria-describedby]="showError('lastName') ? 'lastName-error' : null"
+      class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+      text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+      focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
+      dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
+      dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
+    />
+    @if (showError('lastName')) {
+      <p id="lastName-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+        @if (lastName.errors?.['required']) {
+          Last name is required
+        } @else if (lastName.errors?.['minlength']) {
+          Last name must be at least {{ nameMinLength }} characters
+        } @else {
+          Last name must be at most {{ nameMaxLength }} characters
+        }
+      </p>
+    }
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <label for="nickname" class="flex gap-[5px] text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">Nickname (optional)</label>
+    <input
+      id="nickname"
+      formControlName="nickname"
+      type="text"
+      autocomplete="nickname"
+      placeholder="Enter a nickname"
+      [attr.aria-invalid]="showError('nickname')"
+      [attr.aria-describedby]="showError('nickname') ? 'nickname-error' : null"
+      class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+      text-[#172033] placeholder:text-[#64748b] focus:border-[#4f46e5] focus:outline-none focus:ring-1
+      focus:ring-[#4f46e5] aria-[invalid=true]:border-red-500 dark:border-[#2c3850] dark:bg-[#0e1625]
+      dark:text-[#f3f5fc] dark:placeholder:text-[#748299] dark:focus:border-[#8064f3]
+      dark:focus:ring-[#8064f3] dark:aria-[invalid=true]:border-red-400"
+    />
+    @if (showError('nickname')) {
+      <p id="nickname-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+        Nickname must be at most {{ nameMaxLength }} characters
+      </p>
+    }
+  </div>
+
+  <button
+    type="submit"
+    [disabled]="submitting()"
+    class="flex h-12 w-full cursor-pointer items-center justify-center rounded-lg border-0 bg-[#4f46e5] text-sm
+    font-semibold text-white hover:bg-[#4338ca] focus-visible:outline focus-visible:outline-2
+    focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-60
+    dark:bg-[#6a5af0] dark:hover:bg-[#5b4be0]"
+  >
+    {{ submitting() ? 'Creating account…' : 'Create account' }}
+  </button>
+</form>

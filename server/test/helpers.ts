@@ -4,6 +4,8 @@ import pg from 'pg';
 import { pino } from 'pino';
 import { createApp } from '../src/app.js';
 import * as schema from '../src/db/schema.js';
+import { createAccountsRepository } from '../src/accounts/repository.js';
+import type { RateLimitOptions } from '../src/rate-limit.js';
 import { createUsersRepository } from '../src/users/repository.js';
 import { getTestUrls } from './test-env.js';
 
@@ -24,7 +26,11 @@ export interface TestServer {
 
 // The API under test, on an ephemeral port, connected as the least-privilege app role.
 // Pass a connection string to point it somewhere else (for example a database with a wrong password).
-export async function startServer(appUrl: string = getTestUrls().app): Promise<TestServer> {
+export async function startServer(
+  appUrl: string = getTestUrls().app,
+  // High by default so tests that sign up repeatedly are never throttled
+  signupRateLimit: RateLimitOptions = { windowMs: 60_000, limit: 10_000 },
+): Promise<TestServer> {
   const pool = new pg.Pool({ connectionString: appUrl });
   const db = drizzle({ client: pool, schema });
   const logs: string[] = [];
@@ -32,6 +38,8 @@ export async function startServer(appUrl: string = getTestUrls().app): Promise<T
 
   const app = createApp({
     users: createUsersRepository(db),
+    accounts: createAccountsRepository(db),
+    signupRateLimit,
     checkDatabase: async () => {
       await pool.query('select 1');
     },
@@ -80,8 +88,9 @@ export function createAppPool(): pg.Pool {
   return new pg.Pool({ connectionString: getTestUrls().app });
 }
 
+// Accounts reference users, so they are cleared together
 export async function resetUsers(admin: pg.Pool): Promise<void> {
-  await admin.query('truncate users restart identity');
+  await admin.query('truncate users, accounts restart identity');
 }
 
 export const validUser = {

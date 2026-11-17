@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { HttpError } from '../http-error.js';
 
-const requiredText = (label: string, max: number) =>
+export const requiredText = (label: string, max: number) =>
   z
     .string({ error: `${label} is required` })
     .trim()
@@ -9,7 +9,7 @@ const requiredText = (label: string, max: number) =>
     .max(max, `${label} must be at most ${max} characters`);
 
 // Blank, missing and null all become null: the database stores NULL for "no value"
-const optionalText = (label: string, max: number) =>
+export const optionalText = (label: string, max: number) =>
   z
     .string()
     .trim()
@@ -17,16 +17,18 @@ const optionalText = (label: string, max: number) =>
     .nullish()
     .transform((value) => value || null);
 
+export const emailSchema = z
+  .string({ error: 'Email is required' })
+  .trim()
+  .max(254, 'Email must be at most 254 characters')
+  .pipe(z.email('Email must be a valid address'));
+
 // Unknown keys (notably the form's `id: ''`) are stripped, so a client can never choose an id
 export const userInputSchema = z.object({
   firstName: requiredText('First name', 100),
   lastName: requiredText('Last name', 100),
   nickname: optionalText('Nickname', 100),
-  email: z
-    .string({ error: 'Email is required' })
-    .trim()
-    .max(254, 'Email must be at most 254 characters')
-    .pipe(z.email('Email must be a valid address')),
+  email: emailSchema,
   currentActivity: optionalText('Current activity', 200),
 });
 

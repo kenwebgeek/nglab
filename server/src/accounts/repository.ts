@@ -1,0 +1,31 @@
+import { eq } from 'drizzle-orm';
+import { accounts, users, type UserRow } from '../db/schema.js';
+import { toUserDto, type Db, type UserDto } from '../users/repository.js';
+import type { AccountInput } from './validation.js';
+
+export function createAccountsRepository(db: Db) {
+  return {
+    // Creates the user and their credentials together, so a failure never leaves a user without an account.
+    // A duplicate email surfaces as the users_email_unique violation, mapped to 409 by the error handler.
+    async create(profile: Omit<AccountInput, 'password'>, passwordHash: string): Promise<UserDto> {
+      return db.transaction(async (tx) => {
+        const [user] = await tx.insert(users).values(profile).returning();
+        await tx.insert(accounts).values({ userId: user!.id, passwordHash });
+        return toUserDto(user!);
+      });
+    },
+
+    // The user with this email and their password hash; null when there is no such user or they have no account.
+    // The email column is case-insensitive (citext), so the lookup is too.
+    async findCredentials(email: string): Promise<{ user: UserRow; passwordHash: string } | null> {
+      const [row] = await db
+        .select({ user: users, passwordHash: accounts.passwordHash })
+        .from(users)
+        .innerJoin(accounts, eq(accounts.userId, users.id))
+        .where(eq(users.email, email));
+      return row ?? null;
+    },
+  };
+}
+
+export type AccountsRepository = ReturnType<typeof createAccountsRepository>;

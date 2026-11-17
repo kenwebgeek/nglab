@@ -1,0 +1,24 @@
+<div class="flex h-full flex-col overflow-y-auto bg-[#f5f7fb] font-inter [&_*]:font-inter dark:bg-[#0b1220]">
+  <header
+    class="flex h-[88px] shrink-0 items-center justify-between border-0 border-b border-solid
+    border-[#e3e8f0] bg-white px-6 sm:px-12 dark:border-[#1f2937] dark:bg-[#0f172a]"
+  >
+    <div class="flex h-12 items-center gap-[10px]">
+      <span
+        aria-hidden="true"
+        class="flex h-8 w-[30px] items-center justify-center rounded-lg bg-[#4f46e5] text-[19px] font-bold text-white"
+      >A</span>
+      <span class="text-[17px] text-[#172033] dark:text-[#f3f5fc]">Angular Lab</span>
+    </div>
+    <span class="text-[13px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">User management</span>
+  </header>
+
+  <main class="flex flex-1 flex-col items-center justify-center px-4 py-10">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="flex h-[88px] shrink-0 items-center justify-between px-6 text-xs leading-[1.5] sm:px-12">
+    <span class="text-[#58657a] dark:text-[#a2aec3]">Angular Lab · User management</span>
+    <span class="font-medium text-[#4f46e5] dark:text-[#a99aff]">Help &amp; support</span>
+  </footer>
+</div>
