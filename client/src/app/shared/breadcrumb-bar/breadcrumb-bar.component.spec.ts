@@ -27,6 +27,17 @@ describe('BreadcrumbBarComponent', () => {
     expect(emitted).toBe(1);
   });
 
+  it('should emit when the log out button is clicked', () => {
+    let emitted = 0;
+    fixture.componentInstance.loggedOut.subscribe(() => emitted++);
+
+    const logOut = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button'))
+      .find(button => button.textContent?.trim() === 'Log out')!;
+    logOut.click();
+
+    expect(emitted).toBe(1);
+  });
+
   it('should reflect the dark mode state on the button', () => {
     const button = fixture.nativeElement.querySelector('button[aria-label="Toggle dark mode"]');
     expect(button.getAttribute('aria-pressed')).toBe('false');

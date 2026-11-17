@@ -7,4 +7,5 @@ import { Component, input, output } from '@angular/core';
 export class BreadcrumbBarComponent {
   readonly isDarkMode = input(false);
   readonly darkModeToggled = output<void>();
+  readonly loggedOut = output<void>();
 }

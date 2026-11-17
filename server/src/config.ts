@@ -9,4 +9,6 @@ export const config = {
   host: process.env['HOST'] ?? '127.0.0.1',
   corsOrigin: process.env['CORS_ORIGIN'] ?? 'http://localhost:4200',
   logLevel: process.env['LOG_LEVEL'] ?? 'info',
+  // Cookies are marked Secure in production; set COOKIE_SECURE=true to force it elsewhere
+  secureCookies: process.env['COOKIE_SECURE'] === 'true' || process.env['NODE_ENV'] === 'production',
 };

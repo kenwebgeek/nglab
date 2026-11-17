@@ -43,6 +43,13 @@
       "when": 1794877975930,
       "tag": "0005_recreate_accounts_for_users",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794879457323,
+      "tag": "0006_create_sessions",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BreadcrumbBarComponent } from '../shared/breadcrumb-bar/breadcrumb-bar.component';
 import { SidebarComponent } from '../shared/sidebar/sidebar.component';
+import { SessionStore } from '../auth/state/session.store';
 import { ThemeStore } from '../shared/theme/theme.store';
 
 // The signed-in application chrome: sidebar and breadcrumb bar around the routed page
@@ -13,4 +14,5 @@ import { ThemeStore } from '../shared/theme/theme.store';
 })
 export class ShellLayoutComponent {
   readonly theme = inject(ThemeStore);
+  readonly session = inject(SessionStore);
 }

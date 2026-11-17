@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { SessionStore } from '../auth/state/session.store';
 import { ThemeStore } from '../shared/theme/theme.store';
 import { ShellLayoutComponent } from './shell-layout.component';
 
@@ -32,5 +33,17 @@ describe('ShellLayoutComponent', () => {
 
     toggle.click();
     expect(theme.isDarkMode()).toBeFalse();
+  });
+
+  it('should log out through the session store when Log out is clicked', () => {
+    const logout = spyOn(TestBed.inject(SessionStore), 'logout');
+    const fixture = TestBed.createComponent(ShellLayoutComponent);
+    fixture.detectChanges();
+    const logOut = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
+      .find(button => button.textContent?.trim() === 'Log out')!;
+
+    logOut.click();
+
+    expect(logout).toHaveBeenCalled();
   });
 });

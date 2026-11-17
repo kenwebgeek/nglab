@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, customType, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { check, customType, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 // Case-insensitive text; the citext extension is created in a hand-written migration
 const citext = customType<{ data: string }>({
@@ -51,3 +51,17 @@ export const accounts = pgTable(
 );
 
 export type AccountRow = typeof accounts.$inferSelect;
+
+// Login sessions. Only a SHA-256 hash of the token is stored, so a database leak cannot be replayed as cookies.
+export const sessions = pgTable(
+  'sessions',
+  {
+    tokenHash: text('token_hash').primaryKey(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('sessions_user_id_idx').on(table.userId), index('sessions_expires_at_idx').on(table.expiresAt)],
+);

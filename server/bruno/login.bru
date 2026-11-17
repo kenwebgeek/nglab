@@ -1,0 +1,27 @@
+meta {
+  name: Log in
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "ada@example.com",
+    "password": "correct horse battery"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.email: eq ada@example.com
+}
+
+docs {
+  Run "Create account" first. Bruno keeps the HttpOnly session cookie, which the /users requests need.
+}

@@ -48,7 +48,7 @@ Run all the commands below from the repo root. The root scripts (`npm start`, `n
 | `npm run api:test` | Run the API tests against a throwaway database (started automatically on port 5434). |
 | `npm test` | Run the Angular tests. |
 
-`db.json` is only the sample data for `npm run db:seed`; the app does not read or write it. To try the API by hand, open the `server/bruno` folder in [Bruno](https://www.usebruno.com/) and choose the `local` environment.
+`db.json` is only the sample data for `npm run db:seed`; the app does not read or write it. To try the API by hand, open the `server/bruno` folder in [Bruno](https://www.usebruno.com/) and choose the `local` environment. The `/users` API needs a login: run "Create account" and then "Log in" first, and Bruno keeps the session cookie.
 
 The migration history and design decisions are in `.docs/postgresql-migration-plan.md`.
 

@@ -9,15 +9,25 @@
     <span class="text-xs font-medium text-[#172033] dark:text-[#e5e7eb]" aria-current="page">Users</span>
   </nav>
 
-  <button
-    type="button"
-    aria-label="Toggle dark mode"
-    [attr.aria-pressed]="isDarkMode()"
-    (click)="darkModeToggled.emit()"
-    class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
-    hover:bg-slate-100 dark:hover:bg-[#1f2937]"
-  >
-    <img src="assets/icons/moon.svg" alt="" width="17" height="17" class="dark:hidden" />
-    <img src="assets/icons/moon-dark.svg" alt="" width="17" height="17" class="hidden dark:block" />
-  </button>
+  <div class="flex items-center gap-2">
+    <button
+      type="button"
+      (click)="loggedOut.emit()"
+      class="h-8 cursor-pointer rounded-md border-0 bg-transparent px-3 text-xs font-medium text-[#172033]
+      hover:bg-slate-100 dark:text-[#e5e7eb] dark:hover:bg-[#1f2937]"
+    >
+      Log out
+    </button>
+    <button
+      type="button"
+      aria-label="Toggle dark mode"
+      [attr.aria-pressed]="isDarkMode()"
+      (click)="darkModeToggled.emit()"
+      class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
+      hover:bg-slate-100 dark:hover:bg-[#1f2937]"
+    >
+      <img src="assets/icons/moon.svg" alt="" width="17" height="17" class="dark:hidden" />
+      <img src="assets/icons/moon-dark.svg" alt="" width="17" height="17" class="hidden dark:block" />
+    </button>
+  </div>
 </header>

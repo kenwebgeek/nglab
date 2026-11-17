@@ -63,8 +63,8 @@ authentication and authorization system. Login, sessions and authorization come 
   `npm run api:test`.
 - Run the stack and compare `/signup` to the Figma screenshot in light and dark.
 
-## Out of scope (part two)
-Login, sessions or tokens, route guards, password reset, email verification.
+## Out of scope
+Password reset, email verification, roles and authorization (login only identifies the user; see part two).
 
 ## Status
 
@@ -78,3 +78,68 @@ Differences from the plan above:
 - The signup rate limit is `express-rate-limit` (10 per client per 15 minutes), injectable through `AppDependencies.signupRateLimit` so tests are not throttled.
 - Name fields are validated on the client after trimming (a name of spaces counts as missing), because the API trims before validating.
 - The 409 message is shared with the Users form ("This email is already registered"); the client shows its own text.
+
+# Authentication, part 2: login
+
+Design: Figma node `35:2` ("Angular Lab · Login"): same header, footer and card as signup, with the eyebrow "WORKSPACE
+ACCESS", title "Welcome back", subtitle "Log in to manage your workspace and users.", Email * (hint "Your email is your
+username."), Password * ("Enter your password", Show/Hide), a "Log in" button and "Don't have an account? Sign up".
+
+Requirements: after signup the user lands on `/login`; after a successful login they land on `/users`.
+
+## Decisions
+
+1. **Server-side sessions in an HttpOnly cookie.** A `sessions` table (SHA-256 hash of a random 256-bit token as the
+   primary key, `user_id` with `ON DELETE CASCADE`, `expires_at`). The cookie is `HttpOnly`, `SameSite=Lax`, `Secure` in
+   production, and lasts 7 days. Logout deletes the row, so a session can really be revoked.
+2. **Login and the users routes and API are protected** (`/users` API requires a session, the client guards the shell
+   routes). The middleware puts an `auth` context (the user) on the request, which is where roles and authorization attach
+   later. `/health` and `POST /accounts` stay public.
+3. **A Log out button** in the shell's header bar, and **signed-in visitors are redirected** from `/login` and `/signup`
+   to `/users`.
+4. Errors never reveal whether an email exists: an unknown email, a user without an account and a wrong password all give
+   `401 invalid_credentials`, and the unknown-email path still runs a password hash so timing does not differ.
+
+## Phases
+
+### 1. Database
+- `sessions` table (migration `0006`), cascade from `users`.
+
+### 2. API (`server/src/auth/`)
+- `POST /auth/login` (`{ email, password }` → sets the cookie, returns the user), `POST /auth/logout` (deletes the session,
+  clears the cookie, `204`), `GET /auth/me` (the current user, or `401`).
+- `requireAuth` middleware on `/users`; `401 unauthenticated` without a valid, unexpired session.
+- CORS allows credentials for the configured origin only; state-changing requests with a different `Origin` get `403`.
+- Failed logins are rate limited (10 per client per 15 minutes; successes do not count). Expired sessions are purged on login.
+- Bruno requests and Vitest tests.
+
+### 3. Client (`client/src/app/auth/`)
+- A functional interceptor adds credentials to API calls and handles an expired session (`401` → signed out, back to `/login`).
+- `SessionStore` (current user, restore from `/auth/me`, logout) and login in `AuthStore`, `authGuard` on the shell routes and
+  `guestGuard` on the auth routes.
+- `LoginPageComponent` and `LoginFormComponent` (reactive form, Show/Hide, errors) at `/login`; the signup success shows
+  "Account created. Log in to continue." on the login page.
+- Log out button in the breadcrumb bar.
+
+### 4. Verification
+- API tests, client tests, production build, and a manual pass: sign up → login page → login → users list → reload stays
+  signed in → logout → `/users` redirects to `/login`.
+
+## Out of scope
+Roles and authorization, password reset, "remember me", account lockout, email verification.
+
+## Status (part 2)
+
+Implemented and verified: API tests (145), client tests (100), production build, and a manual pass in the browser:
+sign up → `/login` with the "Account created" notice → wrong password shows the error → login → `/users`; reload stays
+signed in; `/login` while signed in goes to `/users`; Log out ends the session (the `sessions` row is gone) and `/users`
+redirects to `/login`.
+
+Notes:
+- Sessions last 7 days from login (not extended on use) and the cookie is `Secure` only when `NODE_ENV=production` or
+  `COOKIE_SECURE=true`.
+- The users tests run with a stand-in signed-in user (`startServer` default); `auth.api.test.ts` uses real sessions
+  (`realAuth: true`).
+- Seeded users have no account, so they cannot log in until credentials are added for them.
+- A failed logout request still signs the user out in the browser (best effort); the server-side session then expires on its own.
+- The login rate limit is per client IP, not per email.

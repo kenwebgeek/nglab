@@ -13,7 +13,8 @@ export class SignupPageComponent implements OnInit {
   readonly store = inject(AuthStore);
 
   ngOnInit(): void {
-    // Drop an error left over from an earlier visit
+    // Drop an error or notice left over from an earlier visit
     this.store.dismissError();
+    this.store.dismissNotice();
   }
 }

@@ -1,0 +1,19 @@
+meta {
+  name: Current user
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/auth/me
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  401 until you are logged in. Run "Log in" first.
+}
