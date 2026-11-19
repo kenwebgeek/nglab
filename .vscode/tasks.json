@@ -4,7 +4,27 @@
   "tasks": [
     {
       "type": "npm",
+      "label": "Angular: start",
       "script": "start",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": ".*"
+          },
+          "endsPattern": {
+            "regexp": ".*localhost:4200.*"
+          }
+        }
+      }
+    },
+    {
+      "type": "npm",
+      "label": "Angular: test",
+      "script": "test",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -22,21 +42,17 @@
     },
     {
       "type": "npm",
-      "script": "test",
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "typescript",
-        "pattern": "$tsc",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": {
-            "regexp": "(.*?)"
-          },
-          "endsPattern": {
-            "regexp": "bundle generation complete"
-          }
-        }
-      }
+      "label": "Database: start",
+      "script": "db:up",
+      "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "label": "Database: migrate",
+      "script": "db:migrate",
+      "dependsOn": "Database: start",
+      "dependsOrder": "sequence",
+      "problemMatcher": []
     }
   ]
 }
