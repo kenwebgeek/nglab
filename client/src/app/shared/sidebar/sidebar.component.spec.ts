@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { User } from '../../users/models/user.interface';
 import { UsersStore } from '../../users/state/users.store';
 
@@ -12,7 +13,10 @@ describe('SidebarComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SidebarComponent],
-      providers: [{ provide: UsersStore, useValue: { users } }],
+      providers: [
+        provideRouter([]),
+        { provide: UsersStore, useValue: { users } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SidebarComponent);

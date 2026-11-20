@@ -1,0 +1,297 @@
+<section
+  aria-labelledby="account-heading"
+  class="mx-auto flex w-full max-w-[1224px] flex-col font-inter [&_*]:font-inter"
+>
+  <header class="flex flex-col gap-2 px-5 pb-[30px] pt-[34px] sm:px-10">
+    <h1 id="account-heading" class="m-0 text-[30px] leading-[1.2] text-[#172033] dark:text-[#f8fafc]">
+      My account
+    </h1>
+    <p class="m-0 text-[13px] leading-normal text-[#58657a] dark:text-[#94a3b8]">
+      Manage your profile, password, and account preferences.
+    </p>
+  </header>
+
+  <div class="flex flex-col gap-6 px-5 pb-10 sm:px-10">
+    <div class="grid gap-6 xl:grid-cols-[4fr_3fr]">
+      <section
+        aria-labelledby="profile-heading"
+        class="flex min-h-[600px] flex-col gap-5 rounded-xl border border-solid border-[#e3e8f0] bg-white p-5
+        sm:p-7 dark:border-[#2c3850] dark:bg-[#0f172a]"
+      >
+        <header class="flex flex-col gap-1">
+          <h2 id="profile-heading" class="m-0 text-lg font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+            Profile information
+          </h2>
+          <p class="m-0 text-[13px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+            Update the details associated with your account.
+          </p>
+        </header>
+
+        <form class="flex flex-col gap-5" aria-label="Profile information">
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div class="flex flex-col gap-2">
+              <label for="account-first-name" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+                First name *
+              </label>
+              <input
+                id="account-first-name"
+                type="text"
+                value="Tony"
+                autocomplete="given-name"
+                class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+                text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
+                dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
+                dark:focus:ring-[#8064f3]"
+              />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label for="account-last-name" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+                Last name *
+              </label>
+              <input
+                id="account-last-name"
+                type="text"
+                value="Stark"
+                autocomplete="family-name"
+                class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+                text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
+                dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
+                dark:focus:ring-[#8064f3]"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label for="account-email" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+              Email *
+            </label>
+            <input
+              id="account-email"
+              type="email"
+              value="tonystark@avengers.com"
+              autocomplete="email"
+              aria-describedby="account-email-hint"
+              class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+              text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
+              dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
+              dark:focus:ring-[#8064f3]"
+            />
+            <p id="account-email-hint" class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+              Your email is your username.
+            </p>
+          </div>
+
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div class="flex flex-col gap-2">
+              <label for="account-nickname" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+                Nickname (optional)
+              </label>
+              <input
+                id="account-nickname"
+                type="text"
+                value="Iron Man"
+                autocomplete="nickname"
+                class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+                text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
+                dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
+                dark:focus:ring-[#8064f3]"
+              />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label for="account-activity" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+                Current activity (optional)
+              </label>
+              <input
+                id="account-activity"
+                type="text"
+                value="Being a genius"
+                class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+                text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
+                dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
+                dark:focus:ring-[#8064f3]"
+              />
+            </div>
+          </div>
+
+          <p class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+            Your nickname and current activity appear in the user directory.
+          </p>
+        </form>
+
+        <div class="mt-auto flex flex-wrap items-center gap-3 pt-2">
+          <button
+            type="button"
+            class="h-11 rounded-lg border-0 bg-[#4f46e5] px-[18px] text-sm font-semibold text-white
+            hover:bg-[#4338ca] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+            focus-visible:outline-[#4f46e5] dark:bg-[#6a5af0] dark:hover:bg-[#5b4be0]"
+          >
+            Save changes
+          </button>
+          <button
+            type="button"
+            class="h-11 rounded-lg border border-solid border-[#e3e8f0] bg-white px-[18px] text-sm font-semibold
+            text-[#172033] hover:bg-[#f8fafc] dark:border-[#2c3850] dark:bg-[#131c2d]
+            dark:text-[#f3f5fc] dark:hover:bg-[#1a2538]"
+          >
+            Cancel
+          </button>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="password-heading"
+        class="flex min-h-[600px] flex-col gap-5 rounded-xl border border-solid border-[#e3e8f0] bg-white p-5
+        sm:p-7 dark:border-[#2c3850] dark:bg-[#0f172a]"
+      >
+        <header class="flex flex-col gap-1">
+          <h2 id="password-heading" class="m-0 text-lg font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+            Change password
+          </h2>
+          <p class="m-0 text-[13px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+            Choose a strong password to keep your account secure.
+          </p>
+        </header>
+
+        <form class="flex flex-col gap-5" aria-label="Change password">
+          <div class="flex flex-col gap-2">
+            <label for="current-password" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+              Current password *
+            </label>
+            <div
+              class="flex h-12 items-center rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px]
+              focus-within:border-[#4f46e5] focus-within:ring-1 focus-within:ring-[#4f46e5]
+              dark:border-[#2c3850] dark:bg-[#0e1625] dark:focus-within:border-[#8064f3]
+              dark:focus-within:ring-[#8064f3]"
+            >
+              <input
+                id="current-password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Enter current password"
+                class="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#172033]
+                placeholder:text-[#58657a] focus:outline-none focus:ring-0 dark:text-[#f3f5fc]
+                dark:placeholder:text-[#748299]"
+              />
+              <button type="button" class="border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]">
+                Show
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label for="new-password" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+              New password *
+            </label>
+            <div
+              class="flex h-12 items-center rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px]
+              focus-within:border-[#4f46e5] focus-within:ring-1 focus-within:ring-[#4f46e5]
+              dark:border-[#2c3850] dark:bg-[#0e1625] dark:focus-within:border-[#8064f3]
+              dark:focus-within:ring-[#8064f3]"
+            >
+              <input
+                id="new-password"
+                type="password"
+                autocomplete="new-password"
+                placeholder="Enter new password"
+                class="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#172033]
+                placeholder:text-[#58657a] focus:outline-none focus:ring-0 dark:text-[#f3f5fc]
+                dark:placeholder:text-[#748299]"
+              />
+              <button type="button" class="border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]">
+                Show
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label for="confirm-password" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+              Confirm new password *
+            </label>
+            <div
+              class="flex h-12 items-center rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px]
+              focus-within:border-[#4f46e5] focus-within:ring-1 focus-within:ring-[#4f46e5]
+              dark:border-[#2c3850] dark:bg-[#0e1625] dark:focus-within:border-[#8064f3]
+              dark:focus-within:ring-[#8064f3]"
+            >
+              <input
+                id="confirm-password"
+                type="password"
+                autocomplete="new-password"
+                placeholder="Re-enter new password"
+                class="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#172033]
+                placeholder:text-[#58657a] focus:outline-none focus:ring-0 dark:text-[#f3f5fc]
+                dark:placeholder:text-[#748299]"
+              />
+              <button type="button" class="border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]">
+                Show
+              </button>
+            </div>
+          </div>
+
+          <p class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+            Use at least 12 characters, including a number and a symbol.
+          </p>
+        </form>
+
+        <div class="mt-auto flex pt-2">
+          <button
+            type="button"
+            class="h-11 rounded-lg border-0 bg-[#4f46e5] px-[18px] text-sm font-semibold text-white
+            hover:bg-[#4338ca] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+            focus-visible:outline-[#4f46e5] dark:bg-[#6a5af0] dark:hover:bg-[#5b4be0]"
+          >
+            Update password
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[4fr_3fr]">
+      <section
+        aria-labelledby="account-access-heading"
+        class="flex min-h-[184px] flex-col items-start gap-3 rounded-xl border border-solid border-[#e3e8f0]
+        bg-white p-5 sm:p-7 dark:border-[#2c3850] dark:bg-[#0f172a]"
+      >
+        <div class="flex flex-col gap-1">
+          <h2 id="account-access-heading" class="m-0 text-lg font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+            Account access
+          </h2>
+          <p class="m-0 text-[13px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+            Signed in as tonystark@avengers.com
+          </p>
+        </div>
+        <button
+          type="button"
+          class="h-11 rounded-lg border border-solid border-[#e3e8f0] bg-white px-[18px] text-sm font-semibold
+          text-[#172033] hover:bg-[#f8fafc] dark:border-[#2c3850] dark:bg-[#131c2d]
+          dark:text-[#f3f5fc] dark:hover:bg-[#1a2538]"
+        >
+          Sign out
+        </button>
+      </section>
+
+      <section
+        aria-labelledby="delete-account-heading"
+        class="flex min-h-[184px] flex-col items-start gap-3 rounded-xl border border-solid border-[#e3e8f0]
+        bg-white p-5 sm:p-7 dark:border-[#2c3850] dark:bg-[#0f172a]"
+      >
+        <div class="flex flex-col gap-1">
+          <h2 id="delete-account-heading" class="m-0 text-lg font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
+            Delete account
+          </h2>
+          <p class="m-0 text-[13px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+            Permanently delete your account and profile information.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="h-11 rounded-lg border border-solid border-[#f0b9b4] bg-white px-[18px] text-sm font-semibold
+          text-[#b42318] hover:bg-red-50 dark:border-[#7f1d1d] dark:bg-[#131c2d]
+          dark:text-[#fca5a5] dark:hover:bg-[#2b1620]"
+        >
+          Delete account
+        </button>
+      </section>
+    </div>
+  </div>
+</section>

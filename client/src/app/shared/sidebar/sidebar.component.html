@@ -16,20 +16,31 @@
 
     <nav class="flex flex-col gap-[14px] px-4 pt-8" aria-label="Workspace">
       <p class="m-0 text-[10px] font-semibold text-[#7c879a] dark:text-[#94a3b8]">WORKSPACE</p>
-      <div
-        class="flex h-[42px] items-center gap-[10px] rounded-lg bg-[#eeedff] px-3 dark:bg-[#1d1b4a]"
-        aria-current="page"
+      <a
+        routerLink="/users"
+        routerLinkActive="bg-[#eeedff] dark:bg-[#1d1b4a]"
+        class="flex h-[42px] items-center gap-[10px] rounded-lg px-3 text-[#4338ca] no-underline
+        hover:bg-[#f4f3ff] dark:text-[#c4b5fd] dark:hover:bg-[#191b3a]"
       >
-        <img src="assets/icons/users.svg" alt="" width="18" height="18" />
-        <span class="flex-1 text-[13px] font-semibold text-[#4338ca] dark:text-[#c4b5fd]">Users</span>
-        <span class="text-[11px] font-semibold text-[#4338ca] dark:text-[#c4b5fd]">{{ usersCount() }}</span>
-      </div>
+        <img src="assets/icons/account/users.svg" alt="" width="18" height="18" />
+        <span class="flex-1 text-[13px] font-semibold">Users</span>
+        <span class="text-[11px] font-semibold">{{ usersCount() }}</span>
+      </a>
+      <a
+        routerLink="/account"
+        routerLinkActive="bg-[#eeedff] dark:bg-[#1d1b4a]"
+        class="flex h-[42px] items-center gap-[10px] rounded-lg px-3 text-[#4338ca] no-underline
+        hover:bg-[#f4f3ff] dark:text-[#c4b5fd] dark:hover:bg-[#191b3a]"
+      >
+        <img src="assets/icons/account/users.svg" alt="" width="18" height="18" />
+        <span class="flex-1 text-[13px] font-semibold">My account</span>
+      </a>
     </nav>
   </div>
 
   <div class="flex flex-col gap-5 p-6">
     <div class="flex items-center gap-[10px]">
-      <img src="assets/icons/circle-help.svg" alt="" width="18" height="18" class="dark:hidden" />
+      <img src="assets/icons/account/circle-help.svg" alt="" width="18" height="18" class="dark:hidden" />
       <img src="assets/icons/circle-help-dark.svg" alt="" width="18" height="18" class="hidden dark:block" />
       <span class="whitespace-nowrap text-xs text-[#58657a] dark:text-[#94a3b8]">Help &amp; support</span>
     </div>
@@ -37,7 +48,7 @@
       class="flex items-center gap-2 border-0 border-t border-solid border-[#e3e8f0] pt-[18px]
       dark:border-[#1f2937]"
     >
-      <img src="assets/icons/layers-2.svg" alt="" width="14" height="14" class="dark:hidden" />
+      <img src="assets/icons/account/layers-2.svg" alt="" width="14" height="14" class="dark:hidden" />
       <img src="assets/icons/layers-2-dark.svg" alt="" width="14" height="14" class="hidden dark:block" />
       <span class="whitespace-nowrap text-[11px] text-[#7c879a] dark:text-[#94a3b8]">User management</span>
     </div>

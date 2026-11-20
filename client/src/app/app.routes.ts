@@ -11,6 +11,10 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'users', pathMatch: 'full' },
       {
+        path: 'account',
+        loadComponent: () => import('./account/account.component').then((m) => m.AccountComponent),
+      },
+      {
         path: 'users',
         loadChildren: () => import('./users/users.routes').then((m) => m.USERS_ROUTES),
       },
