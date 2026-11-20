@@ -8,6 +8,7 @@ import { User } from '../../models/user.interface';
 import { ViewActions } from '../../enums/view-actions.enum';
 import { UsersStore } from '../../state/users.store';
 import { ListComponent } from './list.component';
+import { SessionStore } from '../../../auth/state/session.store';
 
 const users: User[] = [
   { id: 1, firstName: 'Tony', lastName: 'Stark', nickname: 'Iron Man', email: 'tony@avengers.com' },
@@ -42,6 +43,17 @@ describe('ListComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelectorAll('tr[mat-row]').length).toBe(2);
+  });
+
+  it('should display the currently logged-in user first without changing store order', () => {
+    TestBed.inject(SessionStore).setUser(users[1]);
+    http.expectOne('http://localhost:3000/users').flush(users);
+    fixture.detectChanges();
+
+    const names: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('td.mat-column-name'));
+    expect(names[0].textContent).toContain('Natasha Romanoff');
+    expect(names[1].textContent).toContain('Tony Stark');
+    expect(component.users()).toEqual(users);
   });
 
   it('should navigate to the form when viewing a user', () => {

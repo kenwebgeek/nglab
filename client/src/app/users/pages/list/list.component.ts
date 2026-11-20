@@ -7,6 +7,7 @@ import { UsersStore } from '../../state/users.store';
 import { ViewActions } from '../../enums/view-actions.enum';
 import { UsersListComponent } from '../../components/users-list/users-list.component';
 import { ConfirmDialogComponent } from 'src/app/shared/confirm-dialog/confirm-dialog.component';
+import { SessionStore } from '../../../auth/state/session.store';
 
 @Component({
     selector: 'app-list',
@@ -17,8 +18,28 @@ export class ListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly store = inject(UsersStore);
+  private readonly session = inject(SessionStore);
 
   readonly users = this.store.users;
+  readonly displayedUsers = computed(() => {
+    const currentUserId = this.session.user()?.id;
+    const users = this.store.users();
+
+    if (currentUserId === undefined) {
+      return users;
+    }
+
+    const currentUserIndex = users.findIndex(user => user.id === currentUserId);
+    if (currentUserIndex <= 0) {
+      return users;
+    }
+
+    return [
+      users[currentUserIndex],
+      ...users.slice(0, currentUserIndex),
+      ...users.slice(currentUserIndex + 1),
+    ];
+  });
   readonly newUserId = this.store.newUserId;
 
   // The form overlay is a child route; its `:id` marks the row being edited

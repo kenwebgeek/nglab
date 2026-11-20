@@ -1,6 +1,6 @@
 <app-users-list
   [headers]="headers"
-  [users]="users()"
+  [users]="displayedUsers()"
   [highlightedUserId]="userToDelete()?.id ?? null"
   [editingUserId]="editingUserId()"
   [addedUserId]="newUserId()"
