@@ -4,7 +4,6 @@ import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/ro
 import { filter, map, startWith } from 'rxjs';
 import { User } from '../../models/user.interface';
 import { UsersStore } from '../../state/users.store';
-import { ViewActions } from '../../enums/view-actions.enum';
 import { UsersListComponent } from '../../components/users-list/users-list.component';
 import { ConfirmDialogComponent } from 'src/app/shared/confirm-dialog/confirm-dialog.component';
 import { SessionStore } from '../../../auth/state/session.store';
@@ -52,8 +51,6 @@ export class ListComponent implements OnInit {
     ),
     { requireSync: true },
   );
-  readonly editingUserId = computed(() => this.form().userId);
-
   // A failed save is shown inside the open form instead
   readonly notice = computed(() => {
     const notice = this.store.notice();
@@ -79,19 +76,8 @@ export class ListComponent implements OnInit {
     this.store.load();
   }
 
-  selectUser(data: { user: User, action: ViewActions }) {
-    switch(data.action) {
-      case ViewActions.View: {
-        this.router.navigate(['users', 'manage', data.user.id]);
-        console.log(`Routed user ${data.user.id} (${data.user.nickname}) to View/Edit form...`);
-        return;
-      }
-      case ViewActions.Delete: {
-        this.userToDelete.set(data.user);
-        return;
-      }
-      default: ''
-    }
+  selectUser(user: User) {
+    this.userToDelete.set(user);
   }
 
   confirmDelete() {
@@ -110,9 +96,9 @@ export class ListComponent implements OnInit {
     this.store.dismissNotice();
   }
 
-  private readForm(): { open: boolean, userId: number | null } {
+  private readForm(): { open: boolean } {
     // The child's snapshot isn't set yet while this page is created mid-navigation
     const child = this.route.firstChild;
-    return { open: !!child, userId: Number(child?.snapshot?.paramMap.get('id')) || null };
+    return { open: !!child };
   }
 }

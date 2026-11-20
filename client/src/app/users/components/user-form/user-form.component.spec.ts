@@ -23,18 +23,6 @@ describe('UserFormComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should patch the form and switch to Update when a user is selected later', () => {
-    expect(component.actionButtonLabel()).toBe('Create');
-
-    fixture.componentRef.setInput('selectedUser', {
-      id: 1, firstName: 'Tony', lastName: 'Stark', nickname: 'Iron Man', email: 'tony@avengers.com',
-    });
-    fixture.detectChanges();
-
-    expect(component.actionButtonLabel()).toBe('Update');
-    expect(component.userForm.value.firstName).toBe('Tony');
-  });
-
   it('should open as a modal dialog', () => {
     const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog');
     expect(dialog.open).toBeTrue();

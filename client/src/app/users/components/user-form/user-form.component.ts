@@ -1,4 +1,4 @@
-import { Component, ElementRef, afterNextRender, computed, effect, input, output, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, afterNextRender, input, output, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { User } from '../../models/user.interface';
 import { AlertsComponent } from '../../../shared/alerts/alerts.component';
@@ -12,14 +12,12 @@ export class UserFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
-  readonly selectedUser = input<User | null>(null);
   // Set when saving fails, so the error shows inside the open dialog
   readonly errorMessage = input<string | null>(null);
-  readonly action = output<{ value: User, action: string }>();
+  readonly submitted = output<User>();
   readonly cancelled = output<void>();
   readonly closing = signal(false);
   private leaving?: Promise<void>;
-  readonly actionButtonLabel = computed(() => this.selectedUser() ? 'Update' : 'Create');
 
   userForm: FormGroup;
 
@@ -44,13 +42,6 @@ export class UserFormComponent {
 
     afterNextRender(() => this.dialog().nativeElement.showModal());
 
-    // The selected user can arrive after the form is created (e.g. a direct visit while users load)
-    effect(() => {
-      const selectedUser = this.selectedUser();
-      if (selectedUser) {
-        this.userForm.patchValue(selectedUser);
-      }
-    });
   }
 
   // Plays the exit animation; resolves once the dialog is ready to be removed
@@ -85,7 +76,7 @@ export class UserFormComponent {
   }
 
   emitAction() {
-    this.action.emit({ value: this.userForm.value, action: this.actionButtonLabel() });
+    this.submitted.emit(this.userForm.value);
   }
 
   resetForm() {

@@ -198,18 +198,31 @@ describe('PUT /users/:id', () => {
     expect(after.created_at.getTime()).toBe(before.created_at.getTime());
   });
 
-  it("returns 404 for an id that doesn't exist", async () => {
+  it("returns 403 for an id other than the signed-in user", async () => {
     const response = await api('PUT', '/users/2147483647', validUser);
-    expect(response.status).toBe(404);
-    expect(response.body.error).toBe('not_found');
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe('forbidden');
   });
 
   it('rejects an email that belongs to another user with a 409, ignoring case', async () => {
-    await create({ email: 'first@example.com' });
-    const second = await create({ email: 'second@example.com' });
-    const response = await api('PUT', `/users/${second.id}`, { ...validUser, email: 'FIRST@example.com' });
+    const current = await create({ email: 'first@example.com' });
+    await create({ email: 'second@example.com' });
+    const response = await api('PUT', `/users/${current.id}`, { ...validUser, email: 'SECOND@example.com' });
     expect(response.status).toBe(409);
     expect(response.body.error).toBe('email_taken');
+  });
+
+  it('does not allow the signed-in user to update another profile', async () => {
+    const current = await create();
+    const other = await create({ email: 'other@example.com' });
+    const response = await api('PUT', `/users/${other.id}`, { ...validUser, email: other.email });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe('forbidden');
+    expect((await api('GET', '/users')).body).toEqual([
+      current,
+      other,
+    ]);
   });
 
   it('lets a user keep their own email, even with different case', async () => {

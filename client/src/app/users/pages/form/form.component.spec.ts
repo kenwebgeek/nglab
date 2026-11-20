@@ -44,49 +44,10 @@ describe('FormComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should select the user matching the id route param', () => {
-    fixture.componentRef.setInput('id', '1');
-    expect(component.user()).toEqual(tony);
-  });
-
-  it('should have no selected user without a matching id', () => {
-    expect(component.user()).toBeNull();
-
-    fixture.componentRef.setInput('id', '99');
-    expect(component.user()).toBeNull();
-  });
-
-  it('should not reload users when the user is already in the store', () => {
-    fixture.componentRef.setInput('id', '1');
-    fixture.detectChanges();
-    expect(store.load).not.toHaveBeenCalled();
-  });
-
-  it('should load users on a direct visit when the store is empty', () => {
-    store.users.set([]);
-    fixture.componentRef.setInput('id', '1');
-    fixture.detectChanges();
-    expect(store.load).toHaveBeenCalledTimes(1);
-  });
-
   it('should not load users when creating a new user', () => {
     store.users.set([]);
     fixture.detectChanges();
     expect(store.load).not.toHaveBeenCalled();
-  });
-
-  it('should fill the form once the user arrives after a direct visit', () => {
-    store.users.set([]);
-    fixture.componentRef.setInput('id', '1');
-    fixture.detectChanges();
-    const form = (fixture.nativeElement as HTMLElement).querySelector('input[formControlName=firstName]') as HTMLInputElement;
-    expect(form.value).toBe('');
-
-    store.users.set([tony]);
-    fixture.detectChanges();
-
-    expect(form.value).toBe('Tony');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Update/View user');
   });
 
   it('should navigate back to the list when the form is closed', () => {
@@ -106,13 +67,8 @@ describe('FormComponent', () => {
     expect(store.dismissNotice).toHaveBeenCalled();
   });
 
-  it('should add a user on the Create action', () => {
-    component.formAction({ value: tony, action: 'Create' });
+  it('should add a submitted user', () => {
+    component.createUser(tony);
     expect(store.add).toHaveBeenCalledWith(tony);
-  });
-
-  it('should update a user on the Update action', () => {
-    component.formAction({ value: tony, action: 'Update' });
-    expect(store.update).toHaveBeenCalledWith(tony);
   });
 });

@@ -34,7 +34,7 @@ export interface StartServerOptions {
 }
 
 const testUser = {
-  id: 0,
+  id: 1,
   firstName: 'Test',
   lastName: 'Session',
   nickname: '',

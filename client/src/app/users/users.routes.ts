@@ -9,7 +9,6 @@ export const USERS_ROUTES: Routes = [
     // The form renders as an overlay on top of the list
     children: [
       { path: 'manage', component: FormComponent, canDeactivate: [playLeaveAnimation] },
-      { path: 'manage/:id', component: FormComponent, canDeactivate: [playLeaveAnimation] },
     ],
   },
 ];

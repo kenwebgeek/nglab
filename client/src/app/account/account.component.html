@@ -27,7 +27,21 @@
           </p>
         </header>
 
-        <form class="flex flex-col gap-5" aria-label="Profile information">
+        @if (notice(); as notice) {
+          <app-alerts
+            [alert]="notice.type"
+            [message]="notice.message"
+            (dismissed)="usersStore.dismissNotice()"
+          />
+        }
+
+        <form
+          [formGroup]="profileForm"
+          (ngSubmit)="saveProfile()"
+          class="flex flex-col gap-5"
+          aria-label="Profile information"
+          novalidate
+        >
           <div class="grid gap-5 sm:grid-cols-2">
             <div class="flex flex-col gap-2">
               <label for="account-first-name" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
@@ -36,13 +50,20 @@
               <input
                 id="account-first-name"
                 type="text"
-                value="Tony"
+                formControlName="firstName"
                 autocomplete="given-name"
+                [attr.aria-invalid]="showError('firstName')"
+                [attr.aria-describedby]="showError('firstName') ? 'account-first-name-error' : null"
                 class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
                 text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
                 dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
                 dark:focus:ring-[#8064f3]"
               />
+              @if (showError('firstName')) {
+                <p id="account-first-name-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+                  Enter a first name between 2 and 100 characters.
+                </p>
+              }
             </div>
             <div class="flex flex-col gap-2">
               <label for="account-last-name" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
@@ -51,13 +72,20 @@
               <input
                 id="account-last-name"
                 type="text"
-                value="Stark"
+                formControlName="lastName"
                 autocomplete="family-name"
+                [attr.aria-invalid]="showError('lastName')"
+                [attr.aria-describedby]="showError('lastName') ? 'account-last-name-error' : null"
                 class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
                 text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
                 dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
                 dark:focus:ring-[#8064f3]"
               />
+              @if (showError('lastName')) {
+                <p id="account-last-name-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+                  Enter a last name between 2 and 100 characters.
+                </p>
+              }
             </div>
           </div>
 
@@ -68,14 +96,20 @@
             <input
               id="account-email"
               type="email"
-              value="tonystark@avengers.com"
+              formControlName="email"
               autocomplete="email"
-              aria-describedby="account-email-hint"
+              [attr.aria-invalid]="showError('email')"
+              [attr.aria-describedby]="showError('email') ? 'account-email-hint account-email-error' : 'account-email-hint'"
               class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
               text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
               dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
               dark:focus:ring-[#8064f3]"
             />
+            @if (showError('email')) {
+              <p id="account-email-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+                Enter a valid email address.
+              </p>
+            }
             <p id="account-email-hint" class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
               Your email is your username.
             </p>
@@ -89,7 +123,7 @@
               <input
                 id="account-nickname"
                 type="text"
-                value="Iron Man"
+                formControlName="nickname"
                 autocomplete="nickname"
                 class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
                 text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
@@ -104,7 +138,7 @@
               <input
                 id="account-activity"
                 type="text"
-                value="Being a genius"
+                formControlName="currentActivity"
                 class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
                 text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
                 dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc] dark:focus:border-[#8064f3]
@@ -116,26 +150,27 @@
           <p class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
             Your nickname and current activity appear in the user directory.
           </p>
-        </form>
 
-        <div class="mt-auto flex flex-wrap items-center gap-3 pt-2">
-          <button
-            type="button"
-            class="h-11 rounded-lg border-0 bg-[#4f46e5] px-[18px] text-sm font-semibold text-white
-            hover:bg-[#4338ca] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-            focus-visible:outline-[#4f46e5] dark:bg-[#6a5af0] dark:hover:bg-[#5b4be0]"
-          >
-            Save changes
-          </button>
-          <button
-            type="button"
-            class="h-11 rounded-lg border border-solid border-[#e3e8f0] bg-white px-[18px] text-sm font-semibold
-            text-[#172033] hover:bg-[#f8fafc] dark:border-[#2c3850] dark:bg-[#131c2d]
-            dark:text-[#f3f5fc] dark:hover:bg-[#1a2538]"
-          >
-            Cancel
-          </button>
-        </div>
+          <div class="mt-auto flex flex-wrap items-center gap-3 pt-2">
+            <button
+              type="submit"
+              class="h-11 rounded-lg border-0 bg-[#4f46e5] px-[18px] text-sm font-semibold text-white
+              hover:bg-[#4338ca] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+              focus-visible:outline-[#4f46e5] dark:bg-[#6a5af0] dark:hover:bg-[#5b4be0]"
+            >
+              Save changes
+            </button>
+            <button
+              type="button"
+              (click)="resetProfile()"
+              class="h-11 rounded-lg border border-solid border-[#e3e8f0] bg-white px-[18px] text-sm font-semibold
+              text-[#172033] hover:bg-[#f8fafc] dark:border-[#2c3850] dark:bg-[#131c2d]
+              dark:text-[#f3f5fc] dark:hover:bg-[#1a2538]"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </section>
 
       <section
@@ -257,7 +292,7 @@
             Account access
           </h2>
           <p class="m-0 text-[13px] leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
-            Signed in as tonystark@avengers.com
+            Signed in as {{ signedInEmail() }}
           </p>
         </div>
         <button

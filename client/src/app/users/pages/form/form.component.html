@@ -1,6 +1,5 @@
 <app-user-form
-  [selectedUser]="user()"
   [errorMessage]="error()"
-  (action)="formAction($event)"
+  (submitted)="createUser($event)"
   (cancelled)="closeForm()"
 ></app-user-form>

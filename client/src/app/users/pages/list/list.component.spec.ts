@@ -3,9 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Router, provideRouter } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { User } from '../../models/user.interface';
-import { ViewActions } from '../../enums/view-actions.enum';
 import { UsersStore } from '../../state/users.store';
 import { ListComponent } from './list.component';
 import { SessionStore } from '../../../auth/state/session.store';
@@ -56,19 +55,10 @@ describe('ListComponent', () => {
     expect(component.users()).toEqual(users);
   });
 
-  it('should navigate to the form when viewing a user', () => {
-    http.expectOne('http://localhost:3000/users').flush(users);
-    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
-
-    component.selectUser({ user: users[0], action: ViewActions.View });
-
-    expect(navigate).toHaveBeenCalledWith(['users', 'manage', 1]);
-  });
-
   it('should ask for confirmation before deleting and remove the user once confirmed', () => {
     http.expectOne('http://localhost:3000/users').flush(users);
 
-    component.selectUser({ user: users[0], action: ViewActions.Delete });
+    component.selectUser(users[0]);
     fixture.detectChanges();
 
     http.expectNone('http://localhost:3000/users/1');
@@ -91,7 +81,7 @@ describe('ListComponent', () => {
   it('should keep the user when the delete prompt is cancelled', () => {
     http.expectOne('http://localhost:3000/users').flush(users);
 
-    component.selectUser({ user: users[0], action: ViewActions.Delete });
+    component.selectUser(users[0]);
     fixture.detectChanges();
     component.cancelDelete();
     fixture.detectChanges();
@@ -118,7 +108,7 @@ describe('ListComponent row highlights and notices', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([
-          { path: 'users', component: ListComponent, children: [{ path: 'manage/:id', component: StubFormComponent }] },
+          { path: 'users', component: ListComponent, children: [{ path: 'manage', component: StubFormComponent }] },
         ]),
       ],
     });
@@ -127,19 +117,6 @@ describe('ListComponent row highlights and notices', () => {
   });
 
   const rows = () => Array.from(harness.routeNativeElement!.querySelectorAll('tr[mat-row]')) as HTMLElement[];
-
-  it('should highlight the row being edited in blue while its form is open', async () => {
-    await harness.navigateByUrl('/users/manage/1', ListComponent);
-    http.expectOne('http://localhost:3000/users').flush(users);
-    harness.detectChanges();
-
-    expect(rows()[0].classList).toContain('bg-blue-50');
-    expect(rows()[1].classList).not.toContain('bg-blue-50');
-
-    await harness.navigateByUrl('/users', ListComponent);
-    harness.detectChanges();
-    expect(rows()[0].classList).not.toContain('bg-blue-50');
-  });
 
   it('should highlight a newly added row in green and show the success message above the list', async () => {
     await harness.navigateByUrl('/users', ListComponent);

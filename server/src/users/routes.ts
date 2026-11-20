@@ -19,6 +19,9 @@ export function createUsersRouter(users: UsersRepository): Router {
   // The path id wins over any id in the body
   router.put('/:id', async (req, res) => {
     const id = parseId(req.params['id']);
+    if (req.auth?.user.id !== id) {
+      throw new HttpError(403, 'forbidden', 'You can only update your own profile');
+    }
     const input = userInputSchema.parse(req.body);
     const updated = await users.update(id, input);
     if (!updated) {

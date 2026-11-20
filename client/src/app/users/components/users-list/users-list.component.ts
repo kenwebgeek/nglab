@@ -3,7 +3,6 @@ import { User } from '../../models/user.interface';
 import { Notice } from '../../state/users.store';
 import { CommonService } from 'src/app/shared/common.service';
 import { AlertsComponent } from '../../../shared/alerts/alerts.component';
-import { ViewActions } from '../../enums/view-actions.enum';
 import { MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 
 import { RouterLink } from '@angular/router';
@@ -19,16 +18,13 @@ export class UsersListComponent {
 
   readonly headers = input<Array<{ headerName: string, fieldName: keyof User }>>([]);
   readonly users = input<ReadonlyArray<User>>([]);
-  readonly currentUserId = input<number | null>(null);
   // Row to mark as the target of a pending destructive action
   readonly highlightedUserId = input<number | null>(null);
-  // Row whose edit form is open
-  readonly editingUserId = input<number | null>(null);
   // Row of a just-created user
   readonly addedUserId = input<number | null>(null);
   readonly notice = input<Notice | null>(null);
   readonly noticeDismissed = output<void>();
-  readonly user = output<{ user: User, action: ViewActions }>();
+  readonly userDeleted = output<User>();
   readonly headerFields = computed(() => ['name', ...this.headers().map(data => data.fieldName), 'actions']);
 
   alertMessage = '';
@@ -56,9 +52,6 @@ export class UsersListComponent {
     if (user.id === this.highlightedUserId()) {
       return 'bg-red-50 dark:bg-red-500/10';
     }
-    if (user.id === this.editingUserId()) {
-      return 'bg-blue-50 dark:bg-blue-500/10';
-    }
     if (user.id === this.addedUserId()) {
       return 'bg-green-50 dark:bg-green-500/10';
     }
@@ -69,8 +62,8 @@ export class UsersListComponent {
     return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
   }
 
-  selectUser(user: User, action: ViewActions) {
-    this.user.emit({user, action});
+  selectUser(user: User) {
+    this.userDeleted.emit(user);
   }
 
   /**

@@ -1,13 +1,11 @@
 <app-users-list
   [headers]="headers"
   [users]="displayedUsers()"
-  [currentUserId]="currentUserId()"
   [highlightedUserId]="userToDelete()?.id ?? null"
-  [editingUserId]="editingUserId()"
   [addedUserId]="newUserId()"
   [notice]="notice()"
   (noticeDismissed)="dismissNotice()"
-  (user)="selectUser($event)"
+  (userDeleted)="selectUser($event)"
 ></app-users-list>
 
 <router-outlet />

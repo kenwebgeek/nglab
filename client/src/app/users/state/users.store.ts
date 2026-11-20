@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { User } from '../models/user.interface';
 import { UsersService } from '../services/users.service';
+import { SessionStore } from '../../auth/state/session.store';
 
 export interface Notice {
   type: 'success' | 'error';
@@ -15,6 +16,7 @@ const NEW_USER_HIGHLIGHT_MS = 4000;
 export class UsersStore {
   private readonly usersService = inject(UsersService);
   private readonly router = inject(Router);
+  private readonly session = inject(SessionStore);
 
   private readonly _users = signal<ReadonlyArray<User>>([]);
   readonly users = this._users.asReadonly();
@@ -50,13 +52,18 @@ export class UsersStore {
     });
   }
 
-  update(user: User) {
+  update(user: User, options: { navigateToUsers?: boolean } = {}) {
     this._notice.set(null);
     this.usersService.updateUser(user.id, user).subscribe({
-      next: () => {
-        this._users.update((users) => users.map((data) => (data.id === user.id ? user : data)));
-        this.showNotice('success', `${this.fullName(user)} was updated.`);
-        this.router.navigate(['users']);
+      next: (updated) => {
+        this._users.update((users) => users.map((data) => (data.id === updated.id ? updated : data)));
+        if (this.session.user()?.id === updated.id) {
+          this.session.setUser(updated);
+        }
+        this.showNotice('success', `${this.fullName(updated)} was updated.`);
+        if (options.navigateToUsers !== false) {
+          this.router.navigate(['users']);
+        }
       },
       error: () => this.showNotice('error', 'Unable to update the user. Please try again.'),
     });
