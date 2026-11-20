@@ -21,11 +21,12 @@ export class ListComponent implements OnInit {
   private readonly session = inject(SessionStore);
 
   readonly users = this.store.users;
+  readonly currentUserId = computed(() => this.session.user()?.id ?? null);
   readonly displayedUsers = computed(() => {
-    const currentUserId = this.session.user()?.id;
+    const currentUserId = this.currentUserId();
     const users = this.store.users();
 
-    if (currentUserId === undefined) {
+    if (currentUserId === null) {
       return users;
     }
 

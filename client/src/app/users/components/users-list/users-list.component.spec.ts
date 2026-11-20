@@ -39,19 +39,24 @@ describe('UsersListComponent', () => {
     expect(fixture.nativeElement.querySelector('td.mat-column-name').textContent).toContain('Tony Stark');
   });
 
-  it('should emit the Delete action from a delete button beside the edit button', () => {
+  it('should show edit only for the current user and keep delete for every user', () => {
     const tony = { id: 1, firstName: 'Tony', lastName: 'Stark', nickname: 'Iron Man', email: 'tony@avengers.com' };
-    fixture.componentRef.setInput('users', [tony]);
+    const natasha = { id: 2, firstName: 'Natasha', lastName: 'Romanoff', nickname: 'Black Widow', email: 'nat@avengers.com' };
+    fixture.componentRef.setInput('users', [tony, natasha]);
+    fixture.componentRef.setInput('currentUserId', tony.id);
     fixture.detectChanges();
 
     const emitted: Array<{ user: unknown, action: ViewActions }> = [];
     component.user.subscribe(value => emitted.push(value));
 
-    const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('td.mat-column-actions button'));
-    expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['Edit Tony Stark', 'Delete Tony Stark']);
+    const rows: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('tr[mat-row]'));
+    const tonyButtons: HTMLButtonElement[] = Array.from(rows[0].querySelectorAll('button'));
+    const natashaButtons: HTMLButtonElement[] = Array.from(rows[1].querySelectorAll('button'));
+    expect(tonyButtons.map(button => button.getAttribute('aria-label'))).toEqual(['Edit Tony Stark', 'Delete Tony Stark']);
+    expect(natashaButtons.map(button => button.getAttribute('aria-label'))).toEqual(['Delete Natasha Romanoff']);
 
-    buttons[1].click();
-    expect(emitted).toEqual([{ user: tony, action: ViewActions.Delete }]);
+    natashaButtons[0].click();
+    expect(emitted).toEqual([{ user: natasha, action: ViewActions.Delete }]);
   });
 
   it('should highlight only the row of the highlighted user', () => {

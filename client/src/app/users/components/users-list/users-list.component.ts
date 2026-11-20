@@ -19,6 +19,7 @@ export class UsersListComponent {
 
   readonly headers = input<Array<{ headerName: string, fieldName: keyof User }>>([]);
   readonly users = input<ReadonlyArray<User>>([]);
+  readonly currentUserId = input<number | null>(null);
   // Row to mark as the target of a pending destructive action
   readonly highlightedUserId = input<number | null>(null);
   // Row whose edit form is open

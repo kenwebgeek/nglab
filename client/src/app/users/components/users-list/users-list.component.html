@@ -127,22 +127,24 @@
           class="border-b border-solid border-[#e3e8f0] !pr-6 dark:border-[#1f2937]"
         >
           <div class="flex items-center gap-2">
-            <button
-              type="button"
-              (click)="selectUser(element, 0)"
-              [attr.aria-label]="'Edit ' + element.firstName + ' ' + element.lastName"
-              class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
-              hover:bg-slate-100 dark:hover:bg-[#1f2937]"
-            >
-              <img src="assets/icons/pencil.svg" alt="" width="17" height="17" class="dark:hidden" />
-              <img src="assets/icons/pencil-dark.svg" alt="" width="17" height="17" class="hidden dark:block" />
-            </button>
+            @if (element.id === currentUserId()) {
+              <button
+                type="button"
+                (click)="selectUser(element, 0)"
+                [attr.aria-label]="'Edit ' + element.firstName + ' ' + element.lastName"
+                class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
+                hover:bg-slate-100 dark:hover:bg-[#1f2937]"
+              >
+                <img src="assets/icons/pencil.svg" alt="" width="17" height="17" class="dark:hidden" />
+                <img src="assets/icons/pencil-dark.svg" alt="" width="17" height="17" class="hidden dark:block" />
+              </button>
+            }
 
             <button
               type="button"
               (click)="selectUser(element, 1)"
               [attr.aria-label]="'Delete ' + element.firstName + ' ' + element.lastName"
-              class="flex size-8 items-center justify-center rounded-md border-0 bg-transparent
+              class="ml-auto flex size-8 items-center justify-center rounded-md border-0 bg-transparent
               hover:bg-slate-100 dark:hover:bg-[#1f2937]"
             >
               <img src="assets/icons/trash-2.svg" alt="" width="17" height="17" class="dark:hidden" />
