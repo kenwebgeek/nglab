@@ -181,6 +181,55 @@ describe('GET /auth/me', () => {
   });
 });
 
+describe('PUT /auth/password', () => {
+  it('changes the password after verifying the current password', async () => {
+    const cookie = await signIn(server.baseUrl, credentials);
+    const response = await api('PUT', '/auth/password', {
+      currentPassword: credentials.password,
+      newPassword: 'new secure password 2!',
+    }, { cookie });
+
+    expect(response.status).toBe(204);
+    expect((await login(credentials)).status).toBe(401);
+    expect((await login({ ...credentials, password: 'new secure password 2!' })).status).toBe(200);
+    expect((await api('GET', '/auth/me', undefined, { cookie })).status).toBe(200);
+  });
+
+  it('rejects a wrong current password without changing it', async () => {
+    const cookie = await signIn(server.baseUrl, credentials);
+    const response = await api('PUT', '/auth/password', {
+      currentPassword: 'wrong password!',
+      newPassword: 'new secure password 2!',
+    }, { cookie });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('invalid_current_password');
+    expect((await login(credentials)).status).toBe(200);
+  });
+
+  it.each([
+    [{ currentPassword: '', newPassword: 'new secure password 2!' }, 'currentPassword'],
+    [{ currentPassword: credentials.password, newPassword: 'short1!' }, 'newPassword'],
+    [{ currentPassword: credentials.password, newPassword: 'long password without number!' }, 'newPassword'],
+    [{ currentPassword: credentials.password, newPassword: 'longpasswordwithout2ymbol' }, 'newPassword'],
+  ])('validates the password payload', async (body, field) => {
+    const cookie = await signIn(server.baseUrl, credentials);
+    const response = await api('PUT', '/auth/password', body, { cookie });
+
+    expect(response.status).toBe(400);
+    expect(response.body.issues.map((issue: { field: string }) => issue.field)).toContain(field);
+  });
+
+  it('requires a session', async () => {
+    const response = await api('PUT', '/auth/password', {
+      currentPassword: credentials.password,
+      newPassword: 'new secure password 2!',
+    });
+
+    expect(response.status).toBe(401);
+  });
+});
+
 describe('POST /auth/logout', () => {
   it('ends the session and clears the cookie', async () => {
     const cookie = await signIn(server.baseUrl, credentials);
@@ -210,6 +259,7 @@ describe('protected routes', () => {
     ['GET', '/users'],
     ['POST', '/users'],
     ['PUT', '/users/1'],
+    ['PUT', '/auth/password'],
     ['DELETE', '/users/1'],
   ])('%s %s needs a session', async (method, path) => {
     const response = await api(method, path, method === 'GET' || method === 'DELETE' ? undefined : {});

@@ -8,7 +8,7 @@ import { toUserDto } from '../users/repository.js';
 import { requireAuth } from './middleware.js';
 import { clearSessionCookie, readSessionToken, setSessionCookie } from './session-cookie.js';
 import type { SessionsRepository } from './sessions-repository.js';
-import { loginSchema } from './validation.js';
+import { changePasswordSchema, loginSchema } from './validation.js';
 
 export const DEFAULT_LOGIN_RATE_LIMIT: RateLimitOptions = { windowMs: 15 * 60 * 1000, limit: 10 };
 
@@ -62,6 +62,21 @@ export function createAuthRouter({
 
   router.get('/me', requireAuth(sessions), (req, res) => {
     res.json(req.auth!.user);
+  });
+
+  router.put('/password', requireAuth(sessions), async (req, res) => {
+    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+    const passwordHash = await accounts.findPasswordHash(req.auth!.user.id);
+    const passwordMatches = await verifyPassword(currentPassword, passwordHash ?? (await dummyHash));
+    if (!passwordHash || !passwordMatches) {
+      throw new HttpError(400, 'invalid_current_password', 'Current password is incorrect');
+    }
+
+    const updated = await accounts.updatePassword(req.auth!.user.id, await hashPassword(newPassword));
+    if (!updated) {
+      throw new HttpError(404, 'account_not_found', 'Account not found');
+    }
+    res.status(204).end();
   });
 
   return router;

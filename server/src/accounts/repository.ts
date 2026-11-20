@@ -25,6 +25,23 @@ export function createAccountsRepository(db: Db) {
         .where(eq(users.email, email));
       return row ?? null;
     },
+
+    async findPasswordHash(userId: number): Promise<string | null> {
+      const [row] = await db
+        .select({ passwordHash: accounts.passwordHash })
+        .from(accounts)
+        .where(eq(accounts.userId, userId));
+      return row?.passwordHash ?? null;
+    },
+
+    async updatePassword(userId: number, passwordHash: string): Promise<boolean> {
+      const result = await db
+        .update(accounts)
+        .set({ passwordHash, updatedAt: new Date() })
+        .where(eq(accounts.userId, userId))
+        .returning({ userId: accounts.userId });
+      return result.length === 1;
+    },
   };
 }
 

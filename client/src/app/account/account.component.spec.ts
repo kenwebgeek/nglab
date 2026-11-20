@@ -76,4 +76,86 @@ describe('AccountComponent', () => {
 
     expect(component.profileForm.controls.firstName.value).toBe('Tony');
   });
+
+  it('masks passwords by default and toggles each field independently', () => {
+    const inputs = {
+      currentPassword: fixture.nativeElement.querySelector('#current-password') as HTMLInputElement,
+      newPassword: fixture.nativeElement.querySelector('#new-password') as HTMLInputElement,
+      confirmPassword: fixture.nativeElement.querySelector('#confirm-password') as HTMLInputElement,
+    };
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('form[aria-label="Change password"] button'))
+      .filter((button): button is HTMLButtonElement => button instanceof HTMLButtonElement && button.type === 'button');
+
+    expect(Object.values(inputs).map(input => input.type)).toEqual(['password', 'password', 'password']);
+    buttons[1].click();
+    fixture.detectChanges();
+
+    expect(inputs.currentPassword.type).toBe('password');
+    expect(inputs.newPassword.type).toBe('text');
+    expect(inputs.confirmPassword.type).toBe('password');
+  });
+
+  it('does not submit an invalid password change', () => {
+    component.passwordForm.setValue({
+      currentPassword: 'OldPassword1!',
+      newPassword: 'short',
+      confirmPassword: 'different',
+    });
+
+    component.updatePassword();
+
+    http.expectNone('http://localhost:3000/auth/password');
+    expect(component.passwordForm.touched).toBeTrue();
+  });
+
+  it('changes the password and clears sensitive form state', () => {
+    component.passwordForm.setValue({
+      currentPassword: 'OldPassword1!',
+      newPassword: 'NewPassword2!',
+      confirmPassword: 'NewPassword2!',
+    });
+    component.visiblePasswordFields.set({
+      currentPassword: true,
+      newPassword: true,
+      confirmPassword: false,
+    });
+
+    component.updatePassword();
+    const request = http.expectOne('http://localhost:3000/auth/password');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({
+      currentPassword: 'OldPassword1!',
+      newPassword: 'NewPassword2!',
+    });
+    request.flush(null);
+
+    expect(component.passwordForm.getRawValue()).toEqual({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    expect(component.passwordIsVisible('currentPassword')).toBeFalse();
+    expect(component.passwordIsVisible('newPassword')).toBeFalse();
+    expect(component.passwordNotice()).toEqual({ type: 'success', message: 'Your password was updated.' });
+  });
+
+  it('shows a specific message when the current password is wrong', () => {
+    component.passwordForm.setValue({
+      currentPassword: 'WrongPassword1!',
+      newPassword: 'NewPassword2!',
+      confirmPassword: 'NewPassword2!',
+    });
+
+    component.updatePassword();
+    http.expectOne('http://localhost:3000/auth/password').flush(
+      { error: 'invalid_current_password' },
+      { status: 400, statusText: 'Bad Request' },
+    );
+
+    expect(component.passwordNotice()).toEqual({
+      type: 'error',
+      message: 'Current password is incorrect.',
+    });
+    expect(component.passwordSubmitting()).toBeFalse();
+  });
 });

@@ -187,7 +187,21 @@
           </p>
         </header>
 
-        <form class="flex flex-col gap-5" aria-label="Change password">
+        @if (passwordNotice(); as notice) {
+          <app-alerts
+            [alert]="notice.type"
+            [message]="notice.message"
+            (dismissed)="dismissPasswordNotice()"
+          />
+        }
+
+        <form
+          [formGroup]="passwordForm"
+          (ngSubmit)="updatePassword()"
+          class="flex flex-col gap-5"
+          aria-label="Change password"
+          novalidate
+        >
           <div class="flex flex-col gap-2">
             <label for="current-password" class="text-sm font-medium leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
               Current password *
@@ -200,17 +214,30 @@
             >
               <input
                 id="current-password"
-                type="password"
+                formControlName="currentPassword"
+                [type]="passwordIsVisible('currentPassword') ? 'text' : 'password'"
                 autocomplete="current-password"
                 placeholder="Enter current password"
+                [attr.aria-invalid]="showPasswordError('currentPassword')"
+                [attr.aria-describedby]="showPasswordError('currentPassword') ? 'current-password-error' : null"
                 class="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#172033]
                 placeholder:text-[#58657a] focus:outline-none focus:ring-0 dark:text-[#f3f5fc]
                 dark:placeholder:text-[#748299]"
               />
-              <button type="button" class="border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]">
-                Show
+              <button
+                type="button"
+                (click)="togglePasswordVisibility('currentPassword')"
+                [attr.aria-label]="passwordIsVisible('currentPassword') ? 'Hide current password' : 'Show current password'"
+                class="cursor-pointer border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]"
+              >
+                {{ passwordIsVisible('currentPassword') ? 'Hide' : 'Show' }}
               </button>
             </div>
+            @if (showPasswordError('currentPassword')) {
+              <p id="current-password-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+                Current password is required.
+              </p>
+            }
           </div>
 
           <div class="flex flex-col gap-2">
@@ -225,17 +252,32 @@
             >
               <input
                 id="new-password"
-                type="password"
+                formControlName="newPassword"
+                [type]="passwordIsVisible('newPassword') ? 'text' : 'password'"
                 autocomplete="new-password"
                 placeholder="Enter new password"
+                [attr.aria-invalid]="showPasswordError('newPassword')"
+                [attr.aria-describedby]="showPasswordError('newPassword')
+                  ? 'new-password-hint new-password-error'
+                  : 'new-password-hint'"
                 class="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#172033]
                 placeholder:text-[#58657a] focus:outline-none focus:ring-0 dark:text-[#f3f5fc]
                 dark:placeholder:text-[#748299]"
               />
-              <button type="button" class="border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]">
-                Show
+              <button
+                type="button"
+                (click)="togglePasswordVisibility('newPassword')"
+                [attr.aria-label]="passwordIsVisible('newPassword') ? 'Hide new password' : 'Show new password'"
+                class="cursor-pointer border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]"
+              >
+                {{ passwordIsVisible('newPassword') ? 'Hide' : 'Show' }}
               </button>
             </div>
+            @if (showPasswordError('newPassword')) {
+              <p id="new-password-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+                Use at least 12 characters, including a number and a symbol.
+              </p>
+            }
           </div>
 
           <div class="flex flex-col gap-2">
@@ -250,34 +292,49 @@
             >
               <input
                 id="confirm-password"
-                type="password"
+                formControlName="confirmPassword"
+                [type]="passwordIsVisible('confirmPassword') ? 'text' : 'password'"
                 autocomplete="new-password"
                 placeholder="Re-enter new password"
+                [attr.aria-invalid]="showPasswordError('confirmPassword')"
+                [attr.aria-describedby]="showPasswordError('confirmPassword') ? 'confirm-password-error' : null"
                 class="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#172033]
                 placeholder:text-[#58657a] focus:outline-none focus:ring-0 dark:text-[#f3f5fc]
                 dark:placeholder:text-[#748299]"
               />
-              <button type="button" class="border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]">
-                Show
+              <button
+                type="button"
+                (click)="togglePasswordVisibility('confirmPassword')"
+                [attr.aria-label]="passwordIsVisible('confirmPassword') ? 'Hide confirmed password' : 'Show confirmed password'"
+                class="cursor-pointer border-0 bg-transparent p-0 text-xs font-medium text-[#4f46e5] dark:text-[#a99aff]"
+              >
+                {{ passwordIsVisible('confirmPassword') ? 'Hide' : 'Show' }}
               </button>
             </div>
+            @if (showPasswordError('confirmPassword')) {
+              <p id="confirm-password-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+                Passwords must match.
+              </p>
+            }
           </div>
 
-          <p class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+          <p id="new-password-hint" class="m-0 text-xs leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
             Use at least 12 characters, including a number and a symbol.
           </p>
-        </form>
 
-        <div class="mt-auto flex pt-2">
-          <button
-            type="button"
-            class="h-11 rounded-lg border-0 bg-[#4f46e5] px-[18px] text-sm font-semibold text-white
-            hover:bg-[#4338ca] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-            focus-visible:outline-[#4f46e5] dark:bg-[#6a5af0] dark:hover:bg-[#5b4be0]"
-          >
-            Update password
-          </button>
-        </div>
+          <div class="mt-auto flex pt-2">
+            <button
+              type="submit"
+              [disabled]="passwordSubmitting()"
+              class="h-11 rounded-lg border-0 bg-[#4f46e5] px-[18px] text-sm font-semibold text-white
+              hover:bg-[#4338ca] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+              focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#6a5af0]
+              dark:hover:bg-[#5b4be0]"
+            >
+              {{ passwordSubmitting() ? 'Updating password…' : 'Update password' }}
+            </button>
+          </div>
+        </form>
       </section>
     </div>
 
