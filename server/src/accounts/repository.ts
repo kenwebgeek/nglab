@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { accounts, users, type UserRow } from '../db/schema.js';
+import { accounts, sessions, users, type UserRow } from '../db/schema.js';
 import { toUserDto, type Db, type UserDto } from '../users/repository.js';
 import type { AccountInput } from './validation.js';
 
@@ -34,13 +34,20 @@ export function createAccountsRepository(db: Db) {
       return row?.passwordHash ?? null;
     },
 
-    async updatePassword(userId: number, passwordHash: string): Promise<boolean> {
-      const result = await db
-        .update(accounts)
-        .set({ passwordHash, updatedAt: new Date() })
-        .where(eq(accounts.userId, userId))
-        .returning({ userId: accounts.userId });
-      return result.length === 1;
+    async updatePasswordAndRevokeSessions(userId: number, passwordHash: string): Promise<boolean> {
+      return db.transaction(async (tx) => {
+        const result = await tx
+          .update(accounts)
+          .set({ passwordHash, updatedAt: new Date() })
+          .where(eq(accounts.userId, userId))
+          .returning({ userId: accounts.userId });
+        if (result.length !== 1) {
+          return false;
+        }
+
+        await tx.delete(sessions).where(eq(sessions.userId, userId));
+        return true;
+      });
     },
   };
 }

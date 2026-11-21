@@ -183,16 +183,20 @@ describe('GET /auth/me', () => {
 
 describe('PUT /auth/password', () => {
   it('changes the password after verifying the current password', async () => {
-    const cookie = await signIn(server.baseUrl, credentials);
+    const firstCookie = await signIn(server.baseUrl, credentials);
+    const secondCookie = (await login()).headers.getSetCookie()[0]!.split(';')[0]!;
     const response = await api('PUT', '/auth/password', {
       currentPassword: credentials.password,
       newPassword: 'new secure password 2!',
-    }, { cookie });
+    }, { cookie: firstCookie });
 
     expect(response.status).toBe(204);
+    expect(response.headers.getSetCookie()[0]).toMatch(/^session=;.*Expires=Thu, 01 Jan 1970/);
+    expect(await sessionCount()).toBe(0);
+    expect((await api('GET', '/auth/me', undefined, { cookie: firstCookie })).status).toBe(401);
+    expect((await api('GET', '/auth/me', undefined, { cookie: secondCookie })).status).toBe(401);
     expect((await login(credentials)).status).toBe(401);
     expect((await login({ ...credentials, password: 'new secure password 2!' })).status).toBe(200);
-    expect((await api('GET', '/auth/me', undefined, { cookie })).status).toBe(200);
   });
 
   it('rejects a wrong current password without changing it', async () => {
@@ -204,6 +208,8 @@ describe('PUT /auth/password', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('invalid_current_password');
+    expect(await sessionCount()).toBe(1);
+    expect((await api('GET', '/auth/me', undefined, { cookie })).status).toBe(200);
     expect((await login(credentials)).status).toBe(200);
   });
 

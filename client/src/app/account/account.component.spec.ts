@@ -108,7 +108,8 @@ describe('AccountComponent', () => {
     expect(component.passwordForm.touched).toBeTrue();
   });
 
-  it('changes the password and clears sensitive form state', () => {
+  it('changes the password, signs out, and clears sensitive form state', () => {
+    const navigate = spyOn(TestBed.inject(Router), 'navigate');
     component.passwordForm.setValue({
       currentPassword: 'OldPassword1!',
       newPassword: 'NewPassword2!',
@@ -136,7 +137,8 @@ describe('AccountComponent', () => {
     });
     expect(component.passwordIsVisible('currentPassword')).toBeFalse();
     expect(component.passwordIsVisible('newPassword')).toBeFalse();
-    expect(component.passwordNotice()).toEqual({ type: 'success', message: 'Your password was updated.' });
+    expect(TestBed.inject(SessionStore).user()).toBeNull();
+    expect(navigate).toHaveBeenCalledWith(['/login']);
   });
 
   it('shows a specific message when the current password is wrong', () => {

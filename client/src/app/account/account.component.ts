@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
 import { SessionStore } from '../auth/state/session.store';
 import { AlertsComponent } from '../shared/alerts/alerts.component';
@@ -22,6 +23,7 @@ export class AccountComponent {
   private readonly fb = inject(FormBuilder);
   private readonly session = inject(SessionStore);
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   readonly usersStore = inject(UsersStore);
 
   readonly profileForm = this.fb.nonNullable.group({
@@ -144,7 +146,8 @@ export class AccountComponent {
           confirmPassword: false,
         });
         this.passwordSubmitting.set(false);
-        this.passwordNotice.set({ type: 'success', message: 'Your password was updated.' });
+        this.session.clear();
+        this.router.navigate(['/login']);
       },
       error: (error: unknown) => {
         this.passwordSubmitting.set(false);

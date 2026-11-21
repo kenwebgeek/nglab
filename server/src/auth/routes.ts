@@ -72,10 +72,14 @@ export function createAuthRouter({
       throw new HttpError(400, 'invalid_current_password', 'Current password is incorrect');
     }
 
-    const updated = await accounts.updatePassword(req.auth!.user.id, await hashPassword(newPassword));
+    const updated = await accounts.updatePasswordAndRevokeSessions(
+      req.auth!.user.id,
+      await hashPassword(newPassword),
+    );
     if (!updated) {
       throw new HttpError(404, 'account_not_found', 'Account not found');
     }
+    clearSessionCookie(res, secureCookies);
     res.status(204).end();
   });
 
