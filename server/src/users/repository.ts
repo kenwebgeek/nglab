@@ -2,7 +2,7 @@ import { asc, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema.js';
 import { users, type UserRow } from '../db/schema.js';
-import type { UserInput } from './validation.js';
+import type { ManagedUserInput } from './validation.js';
 
 export type Db = NodePgDatabase<typeof schema>;
 
@@ -14,6 +14,7 @@ export interface UserDto {
   nickname: string;
   email: string;
   currentActivity: string;
+  admin: boolean;
 }
 
 // NULL in the database is exposed as '' so the frontend contract doesn't change
@@ -25,6 +26,7 @@ export function toUserDto(row: UserRow): UserDto {
     nickname: row.nickname ?? '',
     email: row.email,
     currentActivity: row.currentActivity ?? '',
+    admin: row.admin,
   };
 }
 
@@ -35,13 +37,13 @@ export function createUsersRepository(db: Db) {
       return rows.map(toUserDto);
     },
 
-    async create(input: UserInput): Promise<UserDto> {
+    async create(input: ManagedUserInput): Promise<UserDto> {
       const [row] = await db.insert(users).values(input).returning();
       return toUserDto(row!);
     },
 
     // updated_at is maintained by a database trigger
-    async update(id: number, input: UserInput): Promise<UserDto | null> {
+    async update(id: number, input: ManagedUserInput): Promise<UserDto | null> {
       const [row] = await db.update(users).set(input).where(eq(users.id, id)).returning();
       return row ? toUserDto(row) : null;
     },

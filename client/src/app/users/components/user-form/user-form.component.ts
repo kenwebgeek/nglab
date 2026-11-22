@@ -1,4 +1,4 @@
-import { Component, ElementRef, afterNextRender, input, output, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, afterNextRender, effect, input, output, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { User } from '../../models/user.interface';
 import { AlertsComponent } from '../../../shared/alerts/alerts.component';
@@ -14,6 +14,9 @@ export class UserFormComponent {
 
   // Set when saving fails, so the error shows inside the open dialog
   readonly errorMessage = input<string | null>(null);
+  readonly selectedUser = input<User | null>(null);
+  readonly editing = input(false);
+  readonly showAdmin = input(true);
   readonly submitted = output<User>();
   readonly cancelled = output<void>();
   readonly closing = signal(false);
@@ -38,8 +41,15 @@ export class UserFormComponent {
       ]],
       currentActivity: [''],
       id: [''],
+      admin: [false],
     });
 
+    effect(() => {
+      const selected = this.selectedUser();
+      if (selected) {
+        this.userForm.patchValue(selected);
+      }
+    });
     afterNextRender(() => this.dialog().nativeElement.showModal());
 
   }
@@ -76,11 +86,15 @@ export class UserFormComponent {
   }
 
   emitAction() {
+    if (this.userForm.invalid || (this.editing() && !this.selectedUser())) {
+      this.userForm.markAllAsTouched();
+      return;
+    }
     this.submitted.emit(this.userForm.value);
   }
 
   resetForm() {
-    this.userForm.reset();
+    this.userForm.reset(this.selectedUser() ?? { admin: false });
   }
 
   showError(name: 'firstName' | 'lastName' | 'email'): boolean {

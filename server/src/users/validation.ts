@@ -34,6 +34,11 @@ export const userInputSchema = z.object({
 
 export type UserInput = z.output<typeof userInputSchema>;
 
+export const managedUserInputSchema = userInputSchema.extend({
+  admin: z.boolean().optional(),
+});
+export type ManagedUserInput = z.output<typeof managedUserInputSchema>;
+
 const MAX_ID = 2_147_483_647;
 
 export function parseId(raw: string | undefined): number {

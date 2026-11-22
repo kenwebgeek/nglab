@@ -40,6 +40,7 @@ const testUser = {
   nickname: '',
   email: 'test.session@example.com',
   currentActivity: '',
+  admin: true,
 };
 
 // The API under test, on an ephemeral port, connected as the least-privilege app role.

@@ -28,6 +28,27 @@ describe('UserFormComponent', () => {
     expect(dialog.open).toBeTrue();
   });
 
+  it('initializes the admin checkbox for a selected user and submits the edited role', () => {
+    fixture.componentRef.setInput('editing', true);
+    fixture.componentRef.setInput('selectedUser', {
+      id: 2, firstName: 'Ada', lastName: 'Lovelace', nickname: '', email: 'ada@example.com', admin: true,
+    });
+    fixture.detectChanges();
+    const checkbox: HTMLInputElement = fixture.nativeElement.querySelector('input[formControlName=admin]');
+    expect(checkbox.checked).toBeTrue();
+    const submitted = jasmine.createSpy('submitted');
+    component.submitted.subscribe(submitted);
+    checkbox.click();
+    component.emitAction();
+    expect(submitted).toHaveBeenCalledWith(jasmine.objectContaining({ id: 2, admin: false }));
+    expect(fixture.nativeElement.querySelector('input[type=password]')).toBeNull();
+  });
+
+  it('defaults the admin checkbox to unchecked for new users', () => {
+    const checkbox: HTMLInputElement = fixture.nativeElement.querySelector('input[formControlName=admin]');
+    expect(checkbox.checked).toBeFalse();
+  });
+
   it('should play the exit animation before resolving animateOut', async () => {
     const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog');
     let resolved = false;

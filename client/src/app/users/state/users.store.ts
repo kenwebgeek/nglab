@@ -75,6 +75,11 @@ export class UsersStore {
     this.usersService.deleteUserData(id).subscribe({
       next: () => {
         this._users.update((users) => users.filter((data) => data.id !== id));
+        if (this.session.user()?.id === id) {
+          this.session.clear();
+          this.router.navigate(['/login']);
+          return;
+        }
         this.showNotice('success', `${user ? this.fullName(user) : 'The user'} was deleted.`);
       },
       error: () => this.showNotice('error', 'Unable to delete the user. Please try again.'),
