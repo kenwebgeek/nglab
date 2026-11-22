@@ -47,6 +47,39 @@ describe('UserFormComponent', () => {
   it('defaults the admin checkbox to unchecked for new users', () => {
     const checkbox: HTMLInputElement = fixture.nativeElement.querySelector('input[formControlName=admin]');
     expect(checkbox.checked).toBeFalse();
+    expect(fixture.nativeElement.querySelector('input[type=password]')).toBeNull();
+  });
+
+  it('submits an optional valid password only for an existing non-admin user', async () => {
+    fixture.componentRef.setInput('editing', true);
+    fixture.componentRef.setInput('selectedUser', {
+      id: 2, firstName: 'Ada', lastName: 'Lovelace', nickname: '', email: 'ada@example.com', admin: false,
+    });
+    await fixture.whenStable();
+    const submitted = jasmine.createSpy('submitted');
+    component.submitted.subscribe(submitted);
+    component.emitAction();
+    expect(submitted.calls.mostRecent().args[0].newPassword).toBeUndefined();
+    component.userForm.get('newPassword')!.setValue('short');
+    component.emitAction();
+    expect(submitted).toHaveBeenCalledTimes(1);
+    component.userForm.get('newPassword')!.setValue('ValidPassword1!');
+    component.emitAction();
+    expect(submitted.calls.mostRecent().args[0].newPassword).toBe('ValidPassword1!');
+    (fixture.nativeElement.querySelector('input[formControlName=admin]') as HTMLInputElement).click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('input[type=password]')).toBeNull();
+    expect(component.userForm.get('newPassword')!.value).toBe('');
+  });
+
+  it('does not display a password field for the signed-in admin', async () => {
+    fixture.componentRef.setInput('editing', true);
+    fixture.componentRef.setInput('showAdmin', false);
+    fixture.componentRef.setInput('selectedUser', {
+      id: 1, firstName: 'Ada', lastName: 'Lovelace', nickname: '', email: 'ada@example.com', admin: true,
+    });
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('input[type=password]')).toBeNull();
   });
 
   it('should play the exit animation before resolving animateOut', async () => {

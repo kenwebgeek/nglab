@@ -2,7 +2,7 @@ import { Component, computed, inject, viewChild } from '@angular/core';
 import { ActivatedRoute, CanDeactivateFn, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { User } from '../../models/user.interface';
+import { UserUpdate } from '../../models/user.interface';
 import { UsersStore } from '../../state/users.store';
 import { UserFormComponent } from '../../components/user-form/user-form.component';
 import { SessionStore } from '../../../auth/state/session.store';
@@ -42,7 +42,7 @@ export class FormComponent {
     this.router.navigate(['/users']);
   }
 
-  createUser(user: User) {
+  createUser(user: UserUpdate) {
     if (this.userId()) {
       if (!this.selectedUser()) {
         return;

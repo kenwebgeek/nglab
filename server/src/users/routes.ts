@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { HttpError } from '../http-error.js';
 import { clearSessionCookie } from '../auth/session-cookie.js';
+import { hashPassword } from '../accounts/password.js';
 import type { UsersRepository } from './repository.js';
-import { managedUserInputSchema, parseId } from './validation.js';
+import { managedUserInputSchema, managedUserUpdateSchema, parseId } from './validation.js';
 
 export function createUsersRouter(users: UsersRepository, secureCookies: boolean): Router {
   const router = Router();
@@ -26,11 +27,19 @@ export function createUsersRouter(users: UsersRepository, secureCookies: boolean
     if (!req.auth!.user.admin && req.auth!.user.id !== id) {
       throw new HttpError(403, 'forbidden', 'You can only update your own profile');
     }
-    const input = managedUserInputSchema.parse(req.body);
+    const { newPassword, ...input } = managedUserUpdateSchema.parse(req.body);
+    if (!req.auth!.user.admin && newPassword !== undefined) {
+      throw new HttpError(403, 'forbidden', 'Only admins can set passwords for other users');
+    }
     if (!req.auth!.user.admin && input.admin !== undefined) {
       throw new HttpError(403, 'forbidden', 'Only admins can change roles');
     }
-    const updated = await users.update(id, input);
+    if (newPassword !== undefined && req.auth!.user.id === id) {
+      throw new HttpError(403, 'forbidden', 'Use your account page to change your password');
+    }
+    const updated = newPassword === undefined
+      ? await users.update(id, input)
+      : await users.updateWithPassword(id, input, await hashPassword(newPassword));
     if (!updated) {
       throw new HttpError(404, 'not_found', 'User not found');
     }

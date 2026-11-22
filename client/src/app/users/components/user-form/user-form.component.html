@@ -183,9 +183,37 @@
       </div>
       @if (showAdmin()) {
         <label class="flex items-center gap-2 text-sm text-[#172033] dark:text-[#f3f5fc]">
-          <input type="checkbox" formControlName="admin" />
+          <input type="checkbox" formControlName="admin" (change)="clearPasswordForAdmin()" />
           Admin
         </label>
+      }
+      @if (editing() && selectedUser() && !selectedUser()?.admin && showAdmin() && !userForm.get('admin')?.value) {
+        <div class="flex flex-col gap-[9px]">
+          <label for="newPassword" class="text-sm font-medium text-[#172033] dark:text-[#f3f5fc]">
+            Set password (optional)
+          </label>
+          <input
+            id="newPassword"
+            formControlName="newPassword"
+            type="password"
+            autocomplete="new-password"
+            [attr.aria-invalid]="userForm.get('newPassword')?.invalid && userForm.get('newPassword')?.touched"
+            [attr.aria-describedby]="userForm.get('newPassword')?.invalid && userForm.get('newPassword')?.touched
+              ? 'new-password-hint new-password-error' : 'new-password-hint'"
+            class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+            text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
+            dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc]"
+          />
+          <p id="new-password-hint" class="m-0 text-xs text-[#64748b] dark:text-[#a2aec3]">
+            Leave blank to keep the current password. Use 12–128 characters, including a number and a symbol.
+            Setting a password signs this user out of existing sessions.
+          </p>
+          @if (userForm.get('newPassword')?.invalid && userForm.get('newPassword')?.touched) {
+            <p id="new-password-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+              Enter a password meeting the requirements above.
+            </p>
+          }
+        </div>
       }
     </div>
 

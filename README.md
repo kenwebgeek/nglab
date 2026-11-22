@@ -64,7 +64,7 @@ Open pull requests from `feature/*` branches into `develop`. Release branches us
 
 ### Authorization
 
-Users can manage and delete their own account. Admins can also create, edit, and delete user profiles and change their admin role; they cannot change another user's password. Profiles created by an admin do not have login credentials.
+Users can manage and delete their own account. Admins can also create, edit, and delete user profiles and change their admin role. When editing another non-admin user, an admin can optionally set a password; this creates login credentials if needed and invalidates the user's existing sessions. Admins cannot set passwords for admins, and users can change their own passwords on My account. Profiles created by an admin do not have login credentials until a password is set.
 
 The role migration marks the existing user with email `kenreynolds78@icloud.com` as an admin and leaves all others as regular users. If that user does not exist when the migration runs, it creates no admin. Public signup never grants admin privileges based on email: after creating and verifying the intended account, a database administrator must explicitly set its `users.admin` column to `true`. Existing admins can then manage roles in the application.
 

@@ -7,3 +7,5 @@ export interface User {
   currentActivity?: string;
   admin?: boolean;
 }
+
+export type UserUpdate = User & { newPassword?: string };

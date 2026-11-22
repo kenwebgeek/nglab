@@ -1,6 +1,6 @@
 import { Component, ElementRef, afterNextRender, effect, input, output, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { User } from '../../models/user.interface';
+import { User, UserUpdate } from '../../models/user.interface';
 import { AlertsComponent } from '../../../shared/alerts/alerts.component';
 
 @Component({
@@ -17,7 +17,7 @@ export class UserFormComponent {
   readonly selectedUser = input<User | null>(null);
   readonly editing = input(false);
   readonly showAdmin = input(true);
-  readonly submitted = output<User>();
+  readonly submitted = output<UserUpdate>();
   readonly cancelled = output<void>();
   readonly closing = signal(false);
   private leaving?: Promise<void>;
@@ -42,12 +42,18 @@ export class UserFormComponent {
       currentActivity: [''],
       id: [''],
       admin: [false],
+      newPassword: ['', [
+        Validators.minLength(12),
+        Validators.maxLength(128),
+        Validators.pattern(/\d/),
+        Validators.pattern(/[^A-Za-z0-9]/),
+      ]],
     });
 
     effect(() => {
       const selected = this.selectedUser();
       if (selected) {
-        this.userForm.patchValue(selected);
+        this.userForm.patchValue({ ...selected, newPassword: '' });
       }
     });
     afterNextRender(() => this.dialog().nativeElement.showModal());
@@ -90,11 +96,18 @@ export class UserFormComponent {
       this.userForm.markAllAsTouched();
       return;
     }
-    this.submitted.emit(this.userForm.value);
+    const { newPassword, ...user } = this.userForm.value;
+    this.submitted.emit(newPassword ? { ...user, newPassword } : user);
   }
 
   resetForm() {
-    this.userForm.reset(this.selectedUser() ?? { admin: false });
+    this.userForm.reset({ ...this.selectedUser(), admin: this.selectedUser()?.admin ?? false, newPassword: '' });
+  }
+
+  clearPasswordForAdmin() {
+    if (this.userForm.get('admin')?.value) {
+      this.userForm.get('newPassword')?.reset('');
+    }
   }
 
   showError(name: 'firstName' | 'lastName' | 'email'): boolean {

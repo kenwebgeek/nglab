@@ -193,4 +193,21 @@ describe('user management routes', () => {
     expect(request.request.body).toEqual(jasmine.objectContaining({ id: 2, admin: false }));
     request.flush({ ...users[1], admin: false });
   });
+
+  it('sends an admin-set password with a non-admin profile update', async () => {
+    TestBed.inject(SessionStore).setUser({ ...users[0], admin: true });
+    await harness.navigateByUrl('/users/manage/2', ListComponent);
+    http.expectOne('http://localhost:3000/users').flush([
+      { ...users[0], admin: true }, { ...users[1], admin: false },
+    ]);
+    harness.detectChanges();
+    const form = harness.routeNativeElement!.querySelector('app-user-form')!;
+    const password = form.querySelector('input[formControlName=newPassword]') as HTMLInputElement;
+    password.value = 'ValidPassword1!';
+    password.dispatchEvent(new Event('input'));
+    (form.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+    const request = http.expectOne('http://localhost:3000/users/2');
+    expect(request.request.body).toEqual(jasmine.objectContaining({ newPassword: 'ValidPassword1!' }));
+    request.flush({ ...users[1], admin: false });
+  });
 });
