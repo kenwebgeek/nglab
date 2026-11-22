@@ -45,6 +45,34 @@ describe('AccountComponent', () => {
     });
   });
 
+  it('displays the admin tag only for an admin', () => {
+    expect(fixture.nativeElement.querySelector('#account-access-heading').parentElement.textContent).not.toContain('Admin');
+    TestBed.inject(SessionStore).setUser({ ...tony, admin: true });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#account-access-heading').parentElement.textContent).toContain('Admin');
+  });
+
+  it('confirms account deletion, then ends the session only after success', () => {
+    const navigate = spyOn(TestBed.inject(Router), 'navigate');
+    component.confirmingDelete.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('dialog').open).toBeTrue();
+    component.deleteAccount();
+    const request = http.expectOne('http://localhost:3000/users/1');
+    expect(request.request.method).toBe('DELETE');
+    expect(TestBed.inject(SessionStore).user()).toEqual(tony);
+    request.flush({});
+    expect(TestBed.inject(SessionStore).user()).toBeNull();
+    expect(navigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('keeps the session and shows an error when account deletion fails', () => {
+    component.deleteAccount();
+    http.expectOne('http://localhost:3000/users/1').flush({}, { status: 500, statusText: 'Server Error' });
+    expect(TestBed.inject(SessionStore).user()).toEqual(tony);
+    expect(component.notice()?.type).toBe('error');
+  });
+
   it('updates the signed-in user without navigating away', () => {
     const navigate = spyOn(TestBed.inject(Router), 'navigate');
     component.profileForm.patchValue({

@@ -4,6 +4,7 @@
   [highlightedUserId]="userToDelete()?.id ?? null"
   [addedUserId]="newUserId()"
   [notice]="notice()"
+  [isAdmin]="isAdmin()"
   (noticeDismissed)="dismissNotice()"
   (userDeleted)="selectUser($event)"
 ></app-users-list>

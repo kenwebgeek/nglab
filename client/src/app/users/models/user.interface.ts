@@ -5,4 +5,7 @@ export interface User {
   nickname: string;
   email: string;
   currentActivity?: string;
+  admin?: boolean;
 }
+
+export type UserUpdate = User & { newPassword?: string };

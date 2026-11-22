@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { HttpError } from '../http-error.js';
+import { newPasswordSchema } from '../auth/validation.js';
 
 export const requiredText = (label: string, max: number) =>
   z
@@ -33,6 +34,14 @@ export const userInputSchema = z.object({
 });
 
 export type UserInput = z.output<typeof userInputSchema>;
+
+export const managedUserInputSchema = userInputSchema.extend({
+  admin: z.boolean().optional(),
+});
+export type ManagedUserInput = z.output<typeof managedUserInputSchema>;
+export const managedUserUpdateSchema = managedUserInputSchema.extend({
+  newPassword: newPasswordSchema.optional(),
+});
 
 const MAX_ID = 2_147_483_647;
 

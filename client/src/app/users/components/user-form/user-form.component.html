@@ -17,10 +17,10 @@
     >
       <div>
         <h2 id="user-form-heading" class="m-0 text-[22px] font-semibold leading-[1.5] text-[#172033] dark:text-[#f3f5fc]">
-          Add user
+          {{ editing() ? 'Edit user' : 'Add user' }}
         </h2>
         <p class="m-0 text-sm leading-[1.5] text-[#64748b] dark:text-[#a2aec3]">
-          Enter the details below to create a profile.
+          {{ editing() ? 'Update this user’s profile.' : 'Enter the details below to create a profile.' }}
         </p>
       </div>
       <div class="flex items-start gap-3">
@@ -45,6 +45,9 @@
         alert="error"
         [message]="error"
       />
+    }
+    @if (editing() && !selectedUser()) {
+      <p class="px-[31px] text-sm" role="status">Loading user, or user not found.</p>
     }
 
     <div class="flex flex-col gap-6 px-[31px] pb-[26px] pt-6">
@@ -178,6 +181,40 @@
           dark:placeholder:text-[#748299] dark:focus:border-[#8064f3] dark:focus:ring-[#8064f3]"
         />
       </div>
+      @if (showAdmin()) {
+        <label class="flex items-center gap-2 text-sm text-[#172033] dark:text-[#f3f5fc]">
+          <input type="checkbox" formControlName="admin" (change)="clearPasswordForAdmin()" />
+          Admin
+        </label>
+      }
+      @if (editing() && selectedUser() && !selectedUser()?.admin && showAdmin() && !userForm.get('admin')?.value) {
+        <div class="flex flex-col gap-[9px]">
+          <label for="newPassword" class="text-sm font-medium text-[#172033] dark:text-[#f3f5fc]">
+            Set password (optional)
+          </label>
+          <input
+            id="newPassword"
+            formControlName="newPassword"
+            type="password"
+            autocomplete="new-password"
+            [attr.aria-invalid]="userForm.get('newPassword')?.invalid && userForm.get('newPassword')?.touched"
+            [attr.aria-describedby]="userForm.get('newPassword')?.invalid && userForm.get('newPassword')?.touched
+              ? 'new-password-hint new-password-error' : 'new-password-hint'"
+            class="h-12 w-full rounded-lg border border-solid border-[#cbd5e1] bg-[#f8fafc] px-[14px] text-sm
+            text-[#172033] focus:border-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#4f46e5]
+            dark:border-[#2c3850] dark:bg-[#0e1625] dark:text-[#f3f5fc]"
+          />
+          <p id="new-password-hint" class="m-0 text-xs text-[#64748b] dark:text-[#a2aec3]">
+            Leave blank to keep the current password. Use 12–128 characters, including a number and a symbol.
+            Setting a password signs this user out of existing sessions.
+          </p>
+          @if (userForm.get('newPassword')?.invalid && userForm.get('newPassword')?.touched) {
+            <p id="new-password-error" class="m-0 text-xs text-red-500 dark:text-red-400">
+              Enter a password meeting the requirements above.
+            </p>
+          }
+        </div>
+      }
     </div>
 
     <!-- Form actions -->
@@ -222,6 +259,7 @@
         </button>
         <button
           type="submit"
+          [disabled]="editing() && !selectedUser()"
           class="flex h-11 w-40 shrink-0 cursor-pointer items-center justify-center gap-[9px] rounded-lg border-0
           bg-[#4f46e5] text-sm font-semibold leading-[1.5] text-white hover:bg-[#4338ca] dark:bg-[#8064f3]
           dark:hover:bg-[#7358e8]"
@@ -235,7 +273,7 @@
               class="absolute left-[0.65px] top-[1.4px] max-w-none"
             />
           </span>
-          Create user
+          {{ editing() ? 'Save changes' : 'Create user' }}
         </button>
       </div>
     </div>

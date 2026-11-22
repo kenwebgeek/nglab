@@ -1,6 +1,6 @@
-import { Component, ElementRef, afterNextRender, input, output, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, afterNextRender, effect, input, output, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { User } from '../../models/user.interface';
+import { User, UserUpdate } from '../../models/user.interface';
 import { AlertsComponent } from '../../../shared/alerts/alerts.component';
 
 @Component({
@@ -14,7 +14,10 @@ export class UserFormComponent {
 
   // Set when saving fails, so the error shows inside the open dialog
   readonly errorMessage = input<string | null>(null);
-  readonly submitted = output<User>();
+  readonly selectedUser = input<User | null>(null);
+  readonly editing = input(false);
+  readonly showAdmin = input(true);
+  readonly submitted = output<UserUpdate>();
   readonly cancelled = output<void>();
   readonly closing = signal(false);
   private leaving?: Promise<void>;
@@ -38,8 +41,21 @@ export class UserFormComponent {
       ]],
       currentActivity: [''],
       id: [''],
+      admin: [false],
+      newPassword: ['', [
+        Validators.minLength(12),
+        Validators.maxLength(128),
+        Validators.pattern(/\d/),
+        Validators.pattern(/[^A-Za-z0-9]/),
+      ]],
     });
 
+    effect(() => {
+      const selected = this.selectedUser();
+      if (selected) {
+        this.userForm.patchValue({ ...selected, newPassword: '' });
+      }
+    });
     afterNextRender(() => this.dialog().nativeElement.showModal());
 
   }
@@ -76,11 +92,22 @@ export class UserFormComponent {
   }
 
   emitAction() {
-    this.submitted.emit(this.userForm.value);
+    if (this.userForm.invalid || (this.editing() && !this.selectedUser())) {
+      this.userForm.markAllAsTouched();
+      return;
+    }
+    const { newPassword, ...user } = this.userForm.value;
+    this.submitted.emit(newPassword ? { ...user, newPassword } : user);
   }
 
   resetForm() {
-    this.userForm.reset();
+    this.userForm.reset({ ...this.selectedUser(), admin: this.selectedUser()?.admin ?? false, newPassword: '' });
+  }
+
+  clearPasswordForAdmin() {
+    if (this.userForm.get('admin')?.value) {
+      this.userForm.get('newPassword')?.reset('');
+    }
   }
 
   showError(name: 'firstName' | 'lastName' | 'email'): boolean {

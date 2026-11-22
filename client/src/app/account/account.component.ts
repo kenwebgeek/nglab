@@ -6,6 +6,7 @@ import { AuthService } from '../auth/services/auth.service';
 import { SessionStore } from '../auth/state/session.store';
 import { AlertsComponent } from '../shared/alerts/alerts.component';
 import { UsersStore } from '../users/state/users.store';
+import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
 
 type PasswordField = 'currentPassword' | 'newPassword' | 'confirmPassword';
 type PasswordNotice = { type: 'success' | 'error', message: string };
@@ -17,7 +18,7 @@ const matchingPasswords: ValidatorFn = (form: AbstractControl): ValidationErrors
   selector: 'app-account',
   templateUrl: './account.component.html',
   host: { class: 'block min-h-full' },
-  imports: [AlertsComponent, ReactiveFormsModule],
+  imports: [AlertsComponent, ReactiveFormsModule, ConfirmDialogComponent],
 })
 export class AccountComponent {
   private readonly fb = inject(FormBuilder);
@@ -35,6 +36,8 @@ export class AccountComponent {
   });
   readonly notice = this.usersStore.notice;
   readonly signedInEmail = computed(() => this.session.user()?.email ?? '');
+  readonly isAdmin = computed(() => this.session.user()?.admin === true);
+  readonly confirmingDelete = signal(false);
   readonly passwordForm = this.fb.nonNullable.group({
     currentPassword: ['', [Validators.required, Validators.maxLength(128)]],
     newPassword: ['', [
@@ -166,5 +169,13 @@ export class AccountComponent {
 
   dismissPasswordNotice(): void {
     this.passwordNotice.set(null);
+  }
+
+  deleteAccount(): void {
+    this.confirmingDelete.set(false);
+    const user = this.session.user();
+    if (user) {
+      this.usersStore.remove(user.id);
+    }
   }
 }

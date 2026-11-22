@@ -40,6 +40,7 @@ describe('POST /auth/login', () => {
       nickname: '',
       email: 'ada@example.com',
       currentActivity: '',
+      admin: false,
     });
     const cookie = response.headers.getSetCookie()[0]!;
     expect(cookie).toMatch(/^session=[\w-]{43};/);
@@ -71,7 +72,7 @@ describe('POST /auth/login', () => {
   it('gives every failure the same 401, whether the email, the password or the account is wrong', async () => {
     await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
     // A user created through the users API has no account
-    await api('POST', '/users', { firstName: 'Tony', lastName: 'Stark', email: 'tony@avengers.com' });
+    await admin.query("insert into users (first_name, last_name, email) values ('Tony', 'Stark', 'tony@avengers.com')");
 
     const failures = [
       await login({ ...credentials, password: 'wrong password!' }),
@@ -151,6 +152,70 @@ describe('GET /auth/me', () => {
     expect(response.body).toMatchObject({ email: 'ada@example.com', firstName: 'Ada' });
   });
 
+  describe('authorization roles', () => {
+    it('prevents ordinary users from managing others or changing roles', async () => {
+      const cookie = await signIn(server.baseUrl, credentials);
+      const otherCookie = await signIn(server.baseUrl, { email: 'other@example.com', password: credentials.password });
+      const headers = { cookie };
+      const own = (await api('GET', '/auth/me', undefined, headers)).body;
+      const other = (await api('GET', '/auth/me', undefined, { cookie: otherCookie })).body;
+
+      expect((await api('POST', '/users', { ...own, email: 'new@example.com' }, headers)).status).toBe(403);
+      expect((await api('PUT', `/users/${other.id}`, other, headers)).status).toBe(403);
+      expect((await api('DELETE', `/users/${other.id}`, undefined, headers)).status).toBe(403);
+      expect((await api('PUT', `/users/${own.id}`, { ...own, admin: true }, headers)).status).toBe(403);
+      const { admin: _admin, ...profile } = own;
+      expect((await api('PUT', `/users/${own.id}`, { ...profile, firstName: 'Augusta' }, headers)).status).toBe(200);
+      expect((await api('GET', '/auth/me', undefined, { cookie: otherCookie })).body).toEqual(other);
+    });
+
+    it('applies admin role changes immediately and preserves other users’ passwords', async () => {
+      const adminCookie = await signIn(server.baseUrl, credentials);
+      const otherCookie = await signIn(server.baseUrl, { email: 'other@example.com', password: credentials.password });
+      await admin.query("update users set admin = true where email = 'ada@example.com'");
+      const headers = { cookie: adminCookie };
+      const other = (await api('GET', '/auth/me', undefined, { cookie: otherCookie })).body;
+      const before = (await admin.query('select password_hash from accounts where user_id = $1', [other.id])).rows[0];
+      const created = await api('POST', '/users', { ...validUserForRole(), admin: true }, headers);
+      expect(created.status).toBe(201);
+      expect(created.body.admin).toBe(true);
+
+      const updated = await api('PUT', `/users/${other.id}`, {
+        ...other, firstName: 'Grace', admin: true, password: 'attacker-chosen-password',
+      }, headers);
+      expect(updated.status).toBe(200);
+      expect(updated.body).toMatchObject({ firstName: 'Grace', admin: true });
+      expect((await admin.query('select password_hash from accounts where user_id = $1', [other.id])).rows[0]).toEqual(before);
+      expect((await api('GET', '/auth/me', undefined, { cookie: otherCookie })).body.admin).toBe(true);
+
+      expect((await api('PUT', `/users/${other.id}`, { ...updated.body, admin: false }, headers)).body.admin).toBe(false);
+      expect((await api('POST', '/users', validUserForRole(), { cookie: otherCookie })).status).toBe(403);
+      expect((await api('DELETE', `/users/${created.body.id}`, undefined, headers)).status).toBe(200);
+    });
+
+    it('deletes an account, clears its cookie, and invalidates every session', async () => {
+      const cookie = await signIn(server.baseUrl, credentials);
+      const second = await login();
+      const secondCookie = second.headers.getSetCookie()[0]!.split(';')[0]!;
+      const response = await api('DELETE', '/users/1', undefined, { cookie });
+      expect(response.status).toBe(200);
+      expect(response.headers.getSetCookie()[0]).toMatch(/^session=;/);
+      expect((await api('GET', '/auth/me', undefined, { cookie })).status).toBe(401);
+      expect((await api('GET', '/auth/me', undefined, { cookie: secondCookie })).status).toBe(401);
+      expect(await sessionCount()).toBe(0);
+    });
+
+    it('does not accept an admin role during public signup', async () => {
+      const response = await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace', admin: true });
+      expect(response.status).toBe(201);
+      expect(response.body.admin).toBe(false);
+    });
+  });
+
+  function validUserForRole() {
+    return { firstName: 'Tony', lastName: 'Stark', email: 'tony@example.com' };
+  }
+
   it.each([
     ['no cookie', undefined],
     ['an unknown token', 'session=not-a-real-token'],
@@ -182,6 +247,77 @@ describe('GET /auth/me', () => {
 });
 
 describe('PUT /auth/password', () => {
+  it('allows a user to change a password set by an admin', async () => {
+    const adminCookie = await signIn(server.baseUrl, credentials);
+    await admin.query("update users set admin = true where email = 'ada@example.com'");
+    const created = await api('POST', '/users', { firstName: 'Grace', lastName: 'Hopper', email: 'grace@example.com' },
+      { cookie: adminCookie });
+    const defaultPassword = 'DefaultPassword1!';
+    const updated = await api('PUT', `/users/${created.body.id}`, {
+      ...created.body, newPassword: defaultPassword,
+    }, { cookie: adminCookie });
+    expect(updated.status).toBe(200);
+    expect(updated.text).not.toContain(defaultPassword);
+    const signedIn = await api('POST', '/auth/login', { email: created.body.email, password: defaultPassword });
+    expect(signedIn.status).toBe(200);
+    const cookie = signedIn.headers.getSetCookie()[0]!.split(';')[0]!;
+    const change = await api('PUT', '/auth/password', {
+      currentPassword: defaultPassword, newPassword: 'PersonalPassword2!',
+    }, { cookie });
+    expect(change.status).toBe(204);
+    expect((await api('POST', '/auth/login', { email: created.body.email, password: defaultPassword })).status).toBe(401);
+    expect((await api('POST', '/auth/login', { email: created.body.email, password: 'PersonalPassword2!' })).status).toBe(200);
+    expect(server.logs.join('\n')).not.toContain(defaultPassword);
+  });
+
+  it('replaces an existing non-admin password and revokes their sessions', async () => {
+    const adminCookie = await signIn(server.baseUrl, credentials);
+    const otherCookie = await signIn(server.baseUrl, { email: 'other@example.com', password: credentials.password });
+    await admin.query("update users set admin = true where email = 'ada@example.com'");
+    const target = (await api('GET', '/auth/me', undefined, { cookie: otherCookie })).body;
+    const response = await api('PUT', `/users/${target.id}`, {
+      ...target, firstName: 'Grace', newPassword: 'Replacement1!',
+    }, { cookie: adminCookie });
+    expect(response.status).toBe(200);
+    expect(response.body.firstName).toBe('Grace');
+    expect((await api('GET', '/auth/me', undefined, { cookie: otherCookie })).status).toBe(401);
+    expect((await api('POST', '/auth/login', { email: target.email, password: credentials.password })).status).toBe(401);
+    expect((await api('POST', '/auth/login', { email: target.email, password: 'Replacement1!' })).status).toBe(200);
+  });
+
+  it('rejects unauthorized and invalid password changes without changing the profile or credentials', async () => {
+    const adminCookie = await signIn(server.baseUrl, credentials);
+    const userCookie = await signIn(server.baseUrl, { email: 'other@example.com', password: credentials.password });
+    const target = (await api('GET', '/auth/me', undefined, { cookie: userCookie })).body;
+    const { admin: _admin, ...profile } = target;
+    const before = (await admin.query('select password_hash from accounts where user_id = $1', [target.id])).rows[0];
+    expect((await api('PUT', `/users/${target.id}`, { ...profile, newPassword: 'Replacement1!' },
+      { cookie: userCookie })).status).toBe(403);
+    await admin.query("update users set admin = true where email = 'ada@example.com'");
+    const headers = { cookie: adminCookie };
+    expect((await api('PUT', `/users/${target.id}`, { ...target, firstName: 'Grace', newPassword: 'short' }, headers)).status).toBe(400);
+    expect((await api('PUT', `/users/${target.id}`, { ...target, admin: true, newPassword: 'Replacement1!' }, headers)).status).toBe(403);
+    const self = (await api('GET', '/auth/me', undefined, headers)).body;
+    expect((await api('PUT', `/users/${self.id}`, { ...self, newPassword: 'Replacement1!' }, headers)).status).toBe(403);
+    await admin.query('update users set admin = true where id = $1', [target.id]);
+    expect((await api('PUT', `/users/${target.id}`, { ...target, admin: false, newPassword: 'Replacement1!' }, headers)).status).toBe(403);
+    expect((await admin.query('select password_hash from accounts where user_id = $1', [target.id])).rows[0]).toEqual(before);
+    expect((await api('GET', '/auth/me', undefined, { cookie: userCookie })).body.firstName).toBe(target.firstName);
+  });
+
+  it('rolls back password and profile updates if the new email is taken', async () => {
+    const adminCookie = await signIn(server.baseUrl, credentials);
+    const userCookie = await signIn(server.baseUrl, { email: 'other@example.com', password: credentials.password });
+    await admin.query("update users set admin = true where email = 'ada@example.com'");
+    const target = (await api('GET', '/auth/me', undefined, { cookie: userCookie })).body;
+    const response = await api('PUT', `/users/${target.id}`, {
+      ...target, email: credentials.email, newPassword: 'Replacement1!',
+    }, { cookie: adminCookie });
+    expect(response.status).toBe(409);
+    expect((await api('GET', '/auth/me', undefined, { cookie: userCookie })).status).toBe(200);
+    expect((await api('POST', '/auth/login', { email: target.email, password: credentials.password })).status).toBe(200);
+  });
+
   it('changes the password after verifying the current password', async () => {
     const firstCookie = await signIn(server.baseUrl, credentials);
     const secondCookie = (await login()).headers.getSetCookie()[0]!.split(';')[0]!;
