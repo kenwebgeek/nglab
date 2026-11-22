@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { User } from '../models/user.interface';
+import { User, UserUpdate } from '../models/user.interface';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -42,7 +42,7 @@ export class UsersService {
   }
 
   // PUT Data
-  updateUser(id: number, user: User) {
+  updateUser(id: number, user: UserUpdate) {
     return this.http
       .put<User>(`${this.baseApi}/users/${id}`, user)
       .pipe(

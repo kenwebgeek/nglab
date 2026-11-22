@@ -77,7 +77,7 @@ export function createApp(deps: AppDependencies): Express {
       logger: deps.logger,
     }),
   );
-  app.use('/users', requireAuth(deps.sessions), createUsersRouter(deps.users));
+  app.use('/users', requireAuth(deps.sessions), createUsersRouter(deps.users, deps.secureCookies));
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'not_found', message: 'Route not found' });

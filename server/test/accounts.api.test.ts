@@ -61,6 +61,7 @@ describe('POST /accounts', () => {
       nickname: 'Countess',
       email: 'ada@example.com',
       currentActivity: '',
+      admin: false,
     });
     expect(response.text).not.toContain(valid.password);
     expect(response.text).not.toContain('scrypt');

@@ -1,8 +1,9 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { User } from '../models/user.interface';
+import { User, UserUpdate } from '../models/user.interface';
 import { UsersService } from '../services/users.service';
 import { SessionStore } from '../../auth/state/session.store';
+import { map, tap } from 'rxjs';
 
 export interface Notice {
   type: 'success' | 'error';
@@ -52,7 +53,7 @@ export class UsersStore {
     });
   }
 
-  update(user: User, options: { navigateToUsers?: boolean } = {}) {
+  update(user: UserUpdate, options: { navigateToUsers?: boolean } = {}) {
     this._notice.set(null);
     this.usersService.updateUser(user.id, user).subscribe({
       next: (updated) => {
@@ -72,13 +73,30 @@ export class UsersStore {
   remove(id: number) {
     this._notice.set(null);
     const user = this._users().find((data) => data.id === id);
-    this.usersService.deleteUserData(id).subscribe({
+    this.deleteUser(id).subscribe({
       next: () => {
-        this._users.update((users) => users.filter((data) => data.id !== id));
+        if (this.session.user()?.id === id) {
+          this.session.clear();
+          this.router.navigate(['/login']);
+          return;
+        }
         this.showNotice('success', `${user ? this.fullName(user) : 'The user'} was deleted.`);
       },
       error: () => this.showNotice('error', 'Unable to delete the user. Please try again.'),
     });
+  }
+
+  deleteOwnAccount(id: number) {
+    return this.deleteUser(id).pipe(
+      tap(() => this.session.clear()),
+      map(() => undefined),
+    );
+  }
+
+  private deleteUser(id: number) {
+    return this.usersService.deleteUserData(id).pipe(
+      tap(() => this._users.update((users) => users.filter((user) => user.id !== id))),
+    );
   }
 
   dismissNotice() {

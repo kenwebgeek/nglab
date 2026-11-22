@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, customType, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, check, customType, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 // Case-insensitive text; the citext extension is created in a hand-written migration
 const citext = customType<{ data: string }>({
@@ -19,6 +19,7 @@ export const users = pgTable(
     nickname: text('nickname'),
     email: citext('email').notNull().unique('users_email_unique'),
     currentActivity: text('current_activity'),
+    admin: boolean('admin').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

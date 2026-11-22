@@ -1,14 +1,17 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
 import { SessionStore } from '../auth/state/session.store';
 import { AlertsComponent } from '../shared/alerts/alerts.component';
 import { UsersStore } from '../users/state/users.store';
+import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.component';
 
 type PasswordField = 'currentPassword' | 'newPassword' | 'confirmPassword';
 type PasswordNotice = { type: 'success' | 'error', message: string };
+const DELETE_SUCCESS_MS = 3000;
 
 const matchingPasswords: ValidatorFn = (form: AbstractControl): ValidationErrors | null =>
   form.get('confirmPassword')?.value === form.get('newPassword')?.value ? null : { mismatch: true };
@@ -17,13 +20,14 @@ const matchingPasswords: ValidatorFn = (form: AbstractControl): ValidationErrors
   selector: 'app-account',
   templateUrl: './account.component.html',
   host: { class: 'block min-h-full' },
-  imports: [AlertsComponent, ReactiveFormsModule],
+  imports: [AlertsComponent, ReactiveFormsModule, ConfirmDialogComponent],
 })
 export class AccountComponent {
   private readonly fb = inject(FormBuilder);
   private readonly session = inject(SessionStore);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly usersStore = inject(UsersStore);
 
   readonly profileForm = this.fb.nonNullable.group({
@@ -35,6 +39,10 @@ export class AccountComponent {
   });
   readonly notice = this.usersStore.notice;
   readonly signedInEmail = computed(() => this.session.user()?.email ?? '');
+  readonly isAdmin = computed(() => this.session.user()?.admin === true);
+  readonly confirmingDelete = signal(false);
+  readonly deleteStatus = signal<'idle' | 'pending' | 'success'>('idle');
+  readonly deleteError = signal<string | null>(null);
   readonly passwordForm = this.fb.nonNullable.group({
     currentPassword: ['', [Validators.required, Validators.maxLength(128)]],
     newPassword: ['', [
@@ -166,5 +174,32 @@ export class AccountComponent {
 
   dismissPasswordNotice(): void {
     this.passwordNotice.set(null);
+  }
+
+  deleteAccount(): void {
+    const user = this.session.user();
+    if (!user || !this.confirmingDelete() || this.deleteStatus() !== 'idle') {
+      return;
+    }
+    this.deleteStatus.set('pending');
+    this.deleteError.set(null);
+    this.usersStore.deleteOwnAccount(user.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.deleteStatus.set('success');
+        const timer = setTimeout(() => this.router.navigate(['/login']), DELETE_SUCCESS_MS);
+        this.destroyRef.onDestroy(() => clearTimeout(timer));
+      },
+      error: () => {
+        this.deleteStatus.set('idle');
+        this.deleteError.set('Unable to delete your account. Please try again.');
+      },
+    });
+  }
+
+  cancelDelete(): void {
+    if (this.deleteStatus() === 'idle') {
+      this.confirmingDelete.set(false);
+      this.deleteError.set(null);
+    }
   }
 }

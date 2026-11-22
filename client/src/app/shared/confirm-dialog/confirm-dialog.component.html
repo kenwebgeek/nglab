@@ -13,11 +13,21 @@
 >
   <div class="flex flex-col gap-2 px-6 pb-5 pt-6">
     <h3 id="confirm-dialog-heading" class="m-0 text-lg font-semibold leading-[1.5]">{{ heading() }}</h3>
-    <p id="confirm-dialog-message" class="m-0 text-sm leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
-      {{ message() }}
-    </p>
+    @if (status() === 'success') {
+      <p id="confirm-dialog-message" role="status" class="m-0 text-sm leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+        {{ message() }}
+      </p>
+    } @else {
+      <p id="confirm-dialog-message" class="m-0 text-sm leading-[1.5] text-[#58657a] dark:text-[#a2aec3]">
+        {{ message() }}
+      </p>
+    }
+    @if (errorMessage(); as error) {
+      <p role="alert" class="m-0 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+    }
   </div>
 
+  @if (status() !== 'success') {
   <div
     class="flex items-center justify-end gap-3 border-0 border-t border-solid border-[#e3e8f0] px-6 py-4
     dark:border-[#2c3850]"
@@ -25,19 +35,22 @@
     <button
       type="button"
       (click)="cancelled.emit()"
+      [disabled]="status() === 'pending'"
       class="h-10 cursor-pointer rounded-lg border border-solid border-[#d5dbe7] bg-transparent px-4 text-[13px]
       font-medium text-[#172033] hover:bg-slate-100 dark:border-[#2c3850] dark:text-[#f3f5fc]
-      dark:hover:bg-[#1f2937]"
+      dark:hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {{ cancelLabel() }}
     </button>
     <button
       type="button"
       (click)="confirmed.emit()"
+      [disabled]="status() === 'pending'"
       class="h-10 cursor-pointer rounded-lg border-0 bg-red-600 px-4 text-[13px] font-semibold text-white
-      hover:bg-red-700"
+      hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {{ confirmLabel() }}
+      {{ status() === 'pending' ? 'Deleting…' : confirmLabel() }}
     </button>
   </div>
+  }
 </dialog>
