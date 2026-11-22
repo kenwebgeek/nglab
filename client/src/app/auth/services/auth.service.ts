@@ -31,4 +31,12 @@ export class AuthService {
   changePassword(request: ChangePasswordRequest): Observable<void> {
     return this.http.put<void>(`${this.baseApi}/auth/password`, request);
   }
+
+  requestPasswordReset(email: string): Observable<void> {
+    return this.http.post<void>(`${this.baseApi}/auth/password-reset/request`, { email });
+  }
+
+  resetPassword(request: { token: string; newPassword: string }): Observable<void> {
+    return this.http.post<void>(`${this.baseApi}/auth/password-reset`, request);
+  }
 }

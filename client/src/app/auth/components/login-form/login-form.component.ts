@@ -1,12 +1,13 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AlertsComponent } from '../../../shared/alerts/alerts.component';
 import { LoginRequest } from '../../models/login-request.interface';
 
 @Component({
     selector: 'app-login-form',
     templateUrl: './login-form.component.html',
-    imports: [ReactiveFormsModule, AlertsComponent]
+    imports: [ReactiveFormsModule, RouterLink, AlertsComponent]
 })
 export class LoginFormComponent {
   private readonly fb = inject(FormBuilder);
