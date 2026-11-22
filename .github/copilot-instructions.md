@@ -1,5 +1,14 @@
 # ng-lab Copilot Instructions
 
+## Git workflow
+
+- This repository follows Git Flow. `main` is the production branch and `develop` is the integration branch.
+- Create every new feature from `develop` with the `feature/<short-name>` prefix. Merge completed features back into `develop` through a pull request.
+- Use `release/<version>` branches from `develop` to prepare production releases; merge releases into both `main` and `develop`.
+- Use `hotfix/<short-name>` branches from `main` for urgent production fixes; merge hotfixes into both `main` and `develop`.
+- Never implement unrelated features directly on `main` or `develop`. Keep work on its appropriately prefixed branch.
+- Before switching tasks, check the current branch and worktree so uncommitted changes stay on the correct branch.
+
 ## Tooling and verification
 
 - The repository has three parts: `client/` (the Angular app, with its own `package.json`, `angular.json` and `node_modules`), `server/` (the API, a separate npm project) and the repo root (Docker Compose, `db/`, `db.json`, docs and a `package.json` of forwarding scripts). Run commands from the root; the Angular CLI itself must run inside `client/` (use `npm run ng -- ...` from the root).

@@ -34,6 +34,18 @@ Run all the commands below from the repo root. The root scripts (`npm start`, `n
 5. **Load the sample users:** `npm run db:seed` imports the users in `db.json` (add `-- --dry-run` to preview first).
 6. **Start everything:** `npm run dev` starts the database (if it isn't running), the API at `http://localhost:3000` and the app at `http://localhost:4200` together, with colored `[api]` and `[client]` log prefixes. Press Ctrl+C once to stop both. To run them separately, use `npm run api` and `npm start` in two terminals.
 
+## Git Flow
+
+`main` contains production-ready code and `develop` is the integration branch. All new features start from `develop`:
+
+```sh
+git switch develop
+git pull --ff-only
+git switch -c feature/<short-name>
+```
+
+Open pull requests from `feature/*` branches into `develop`. Release branches use `release/<version>` and merge into both `main` and `develop`. Production fixes use `hotfix/<short-name>` from `main` and also merge back into both long-lived branches.
+
 ### Useful commands
 
 | Command | What it does |
