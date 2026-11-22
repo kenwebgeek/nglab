@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { User } from '../models/user.interface';
+import { User, UserUpdate } from '../models/user.interface';
 import { UsersService } from '../services/users.service';
 import { SessionStore } from '../../auth/state/session.store';
 
@@ -52,7 +52,7 @@ export class UsersStore {
     });
   }
 
-  update(user: User, options: { navigateToUsers?: boolean } = {}) {
+  update(user: UserUpdate, options: { navigateToUsers?: boolean } = {}) {
     this._notice.set(null);
     this.usersService.updateUser(user.id, user).subscribe({
       next: (updated) => {
@@ -75,6 +75,11 @@ export class UsersStore {
     this.usersService.deleteUserData(id).subscribe({
       next: () => {
         this._users.update((users) => users.filter((data) => data.id !== id));
+        if (this.session.user()?.id === id) {
+          this.session.clear();
+          this.router.navigate(['/login']);
+          return;
+        }
         this.showNotice('success', `${user ? this.fullName(user) : 'The user'} was deleted.`);
       },
       error: () => this.showNotice('error', 'Unable to delete the user. Please try again.'),

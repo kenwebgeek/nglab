@@ -23,9 +23,12 @@ export class UsersListComponent {
   // Row of a just-created user
   readonly addedUserId = input<number | null>(null);
   readonly notice = input<Notice | null>(null);
+  readonly isAdmin = input(false);
   readonly noticeDismissed = output<void>();
   readonly userDeleted = output<User>();
-  readonly headerFields = computed(() => ['name', ...this.headers().map(data => data.fieldName), 'actions']);
+  readonly headerFields = computed(() => [
+    'name', ...this.headers().map(data => data.fieldName), ...(this.isAdmin() ? ['actions'] : []),
+  ]);
 
   alertMessage = '';
   alertType = '';

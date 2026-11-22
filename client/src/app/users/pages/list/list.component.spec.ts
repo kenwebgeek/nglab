@@ -3,11 +3,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { User } from '../../models/user.interface';
 import { UsersStore } from '../../state/users.store';
 import { ListComponent } from './list.component';
 import { SessionStore } from '../../../auth/state/session.store';
+import { USERS_ROUTES } from '../../users.routes';
 
 const users: User[] = [
   { id: 1, firstName: 'Tony', lastName: 'Stark', nickname: 'Iron Man', email: 'tony@avengers.com' },
@@ -112,6 +113,7 @@ describe('ListComponent row highlights and notices', () => {
         ]),
       ],
     });
+
     http = TestBed.inject(HttpTestingController);
     harness = await RouterTestingHarness.create();
   });
@@ -142,5 +144,70 @@ describe('ListComponent row highlights and notices', () => {
 
     expect(harness.routeNativeElement!.querySelector('[role=alert]')?.textContent).toContain('Unable to delete the user');
     expect(rows().length).toBe(2);
+  });
+});
+
+describe('user management routes', () => {
+  let http: HttpTestingController;
+  let harness: RouterTestingHarness;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'users', children: USERS_ROUTES }]),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    harness = await RouterTestingHarness.create();
+  });
+
+  afterEach(() => http.verify());
+
+  it('redirects non-admins who open a management URL directly', async () => {
+    TestBed.inject(SessionStore).setUser({ ...users[0], admin: false });
+    await harness.navigateByUrl('/users/manage/2', ListComponent);
+    http.expectOne('http://localhost:3000/users').flush(users);
+    expect(TestBed.inject(Router).url).toBe('/users');
+    expect(harness.routeNativeElement?.querySelector('app-user-form')).toBeNull();
+  });
+
+  it('loads an edit form on a direct visit and saves the changed role', async () => {
+    TestBed.inject(SessionStore).setUser({ ...users[0], admin: true });
+    await harness.navigateByUrl('/users/manage/2', ListComponent);
+    http.expectOne('http://localhost:3000/users').flush([
+      { ...users[0], admin: true }, { ...users[1], admin: true },
+    ]);
+    harness.detectChanges();
+
+    const form = harness.routeNativeElement!.querySelector('app-user-form')!;
+    const firstName = form.querySelector('input[formControlName=firstName]') as HTMLInputElement;
+    const admin = form.querySelector('input[formControlName=admin]') as HTMLInputElement;
+    expect(firstName.value).toBe('Natasha');
+    expect(admin.checked).toBeTrue();
+    admin.click();
+    (form.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+    const request = http.expectOne('http://localhost:3000/users/2');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual(jasmine.objectContaining({ id: 2, admin: false }));
+    request.flush({ ...users[1], admin: false });
+  });
+
+  it('sends an admin-set password with a non-admin profile update', async () => {
+    TestBed.inject(SessionStore).setUser({ ...users[0], admin: true });
+    await harness.navigateByUrl('/users/manage/2', ListComponent);
+    http.expectOne('http://localhost:3000/users').flush([
+      { ...users[0], admin: true }, { ...users[1], admin: false },
+    ]);
+    harness.detectChanges();
+    const form = harness.routeNativeElement!.querySelector('app-user-form')!;
+    const password = form.querySelector('input[formControlName=newPassword]') as HTMLInputElement;
+    password.value = 'ValidPassword1!';
+    password.dispatchEvent(new Event('input'));
+    (form.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+    const request = http.expectOne('http://localhost:3000/users/2');
+    expect(request.request.body).toEqual(jasmine.objectContaining({ newPassword: 'ValidPassword1!' }));
+    request.flush({ ...users[1], admin: false });
   });
 });

@@ -4,7 +4,7 @@ import type { UserDto } from '../users/repository.js';
 import { readSessionToken } from './session-cookie.js';
 import type { SessionsRepository } from './sessions-repository.js';
 
-// Who is making the request. Roles and permissions will be added here for authorization.
+// Who is making the request, including their current role.
 export interface AuthContext {
   user: UserDto;
 }

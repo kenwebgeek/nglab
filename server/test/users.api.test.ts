@@ -57,6 +57,7 @@ describe('GET /users', () => {
       nickname: '',
       email: 'two@example.com',
       currentActivity: '',
+      admin: false,
     });
   });
 });
@@ -65,7 +66,7 @@ describe('POST /users', () => {
   it('creates a user, returns 201 and lets the database assign the id', async () => {
     const response = await api('POST', '/users', validUser);
     expect(response.status).toBe(201);
-    expect(response.body).toEqual({ id: 1, ...validUser });
+    expect(response.body).toEqual({ id: 1, ...validUser, admin: false });
   });
 
   it("ignores any id in the body, including the form's empty string", async () => {
@@ -95,7 +96,7 @@ describe('POST /users', () => {
       email: '  tony@avengers.com ',
       currentActivity: ' Being a genius  ',
     });
-    expect(response.body).toEqual({ id: 1, ...validUser });
+    expect(response.body).toEqual({ id: 1, ...validUser, admin: false });
   });
 
   it('stores blank optional fields as NULL but returns empty strings', async () => {
@@ -167,6 +168,7 @@ describe('PUT /users/:id', () => {
       nickname: '',
       email: 'tony@avengers.com',
       currentActivity: 'Retired',
+      admin: false,
     });
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
@@ -176,6 +178,7 @@ describe('PUT /users/:id', () => {
       nickname: '',
       email: 'tony@avengers.com',
       currentActivity: 'Retired',
+      admin: false,
     });
   });
 
@@ -198,10 +201,10 @@ describe('PUT /users/:id', () => {
     expect(after.created_at.getTime()).toBe(before.created_at.getTime());
   });
 
-  it("returns 403 for an id other than the signed-in user", async () => {
+  it("returns 404 for an unknown user", async () => {
     const response = await api('PUT', '/users/2147483647', validUser);
-    expect(response.status).toBe(403);
-    expect(response.body.error).toBe('forbidden');
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe('not_found');
   });
 
   it('rejects an email that belongs to another user with a 409, ignoring case', async () => {
@@ -212,16 +215,15 @@ describe('PUT /users/:id', () => {
     expect(response.body.error).toBe('email_taken');
   });
 
-  it('does not allow the signed-in user to update another profile', async () => {
+  it('allows an admin to update another profile', async () => {
     const current = await create();
     const other = await create({ email: 'other@example.com' });
     const response = await api('PUT', `/users/${other.id}`, { ...validUser, email: other.email });
 
-    expect(response.status).toBe(403);
-    expect(response.body.error).toBe('forbidden');
+    expect(response.status).toBe(200);
     expect((await api('GET', '/users')).body).toEqual([
       current,
-      other,
+      response.body,
     ]);
   });
 

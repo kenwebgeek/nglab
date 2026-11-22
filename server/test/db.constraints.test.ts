@@ -1,4 +1,5 @@
 import type pg from 'pg';
+import { readFile } from 'node:fs/promises';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createAdminPool, createAppPool, resetUsers } from './helpers.js';
 
@@ -40,6 +41,28 @@ async function pgError(promise: Promise<unknown>): Promise<{ code?: string; cons
 }
 
 describe('users table constraints', () => {
+  it('initializes the requested existing admin without elevating other users', async () => {
+    const client = await admin.connect();
+    try {
+      await client.query('begin');
+      await client.query('create temporary table users (email citext not null)');
+      await client.query(
+        'insert into users (email) values ($1), ($2)',
+        ['KENREYNOLDS78@ICLOUD.COM', 'other@example.com'],
+      );
+      const migration = await readFile(new URL('../drizzle/0007_lucky_eddie_brock.sql', import.meta.url), 'utf8');
+      await client.query(migration);
+      const { rows } = await client.query('select email, admin from users order by email');
+      expect(rows).toEqual([
+        { email: 'KENREYNOLDS78@ICLOUD.COM', admin: true },
+        { email: 'other@example.com', admin: false },
+      ]);
+    } finally {
+      await client.query('rollback');
+      client.release();
+    }
+  });
+
   it('assigns ids from an identity column and keeps NULL optional fields', async () => {
     const { rows } = await insert('Tony', 'Stark', 'tony@avengers.com');
     expect(rows[0]).toMatchObject({ id: 1, nickname: null, current_activity: null });

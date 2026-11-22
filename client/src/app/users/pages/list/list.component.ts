@@ -21,6 +21,7 @@ export class ListComponent implements OnInit {
 
   readonly users = this.store.users;
   readonly currentUserId = computed(() => this.session.user()?.id ?? null);
+  readonly isAdmin = computed(() => this.session.user()?.admin === true);
   readonly displayedUsers = computed(() => {
     const currentUserId = this.currentUserId();
     const users = this.store.users();

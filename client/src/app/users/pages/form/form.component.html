@@ -1,5 +1,8 @@
 <app-user-form
   [errorMessage]="error()"
+  [selectedUser]="selectedUser()"
+  [editing]="userId() !== null"
+  [showAdmin]="showAdmin()"
   (submitted)="createUser($event)"
   (cancelled)="closeForm()"
 ></app-user-form>

@@ -4,6 +4,7 @@ import { Router, provideRouter } from '@angular/router';
 import { User } from '../../models/user.interface';
 import { UsersStore, Notice } from '../../state/users.store';
 import { FormComponent } from './form.component';
+import { SessionStore } from '../../../auth/state/session.store';
 
 const tony: User = { id: 1, firstName: 'Tony', lastName: 'Stark', nickname: 'Iron Man', email: 'tony@avengers.com' };
 
@@ -31,7 +32,8 @@ describe('FormComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ FormComponent ],
-      providers: [provideRouter([]), { provide: UsersStore, useValue: store }]
+      providers: [provideRouter([]), { provide: UsersStore, useValue: store },
+        { provide: SessionStore, useValue: { user: signal(null) } }]
     })
     .compileComponents();
 
