@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { LoginFormComponent } from './login-form.component';
 
 describe('LoginFormComponent', () => {
@@ -17,7 +18,10 @@ describe('LoginFormComponent', () => {
   };
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [LoginFormComponent] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [LoginFormComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
     fixture = TestBed.createComponent(LoginFormComponent);
     component = fixture.componentInstance;
     element = fixture.nativeElement;
@@ -57,6 +61,12 @@ describe('LoginFormComponent', () => {
   it('uses the right autocomplete hints for a password manager', () => {
     expect(element.querySelector('#email')?.getAttribute('autocomplete')).toBe('username');
     expect(element.querySelector('#password')?.getAttribute('autocomplete')).toBe('current-password');
+  });
+
+  it('links to the forgot-password page', () => {
+    const link = element.querySelector<HTMLAnchorElement>('a');
+    expect(link?.textContent).toContain('Forgot password?');
+    expect(link?.getAttribute('href')).toBe('/forgot-password');
   });
 
   it('toggles the password visibility', () => {

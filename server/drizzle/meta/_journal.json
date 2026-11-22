@@ -50,6 +50,13 @@
       "when": 1794879457323,
       "tag": "0006_create_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795366069087,
+      "tag": "0007_wise_dragon_lord",
+      "breakpoints": true
     }
   ]
 }

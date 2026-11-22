@@ -29,6 +29,7 @@ Run all the commands below from the repo root. The root scripts (`npm start`, `n
 2. **Create your secrets.** Neither file is committed.
    - `cp .env.example .env`, then set `POSTGRES_PASSWORD` and `APP_DB_PASSWORD` to generated values, for example `openssl rand -base64 24 | tr -d '/+='`.
    - `cp server/.env.example server/.env`, then replace `<APP_DB_PASSWORD>` and `<POSTGRES_PASSWORD>` in the two connection URLs with the same values.
+   - For password-reset emails, also set `APP_URL`, `SMTP_HOST`, `SMTP_FROM` and, when authentication is required, `SMTP_USER` and `SMTP_PASSWORD` in `server/.env`.
 3. **Start the database:** `npm run db:up`
 4. **Create the tables:** `npm run db:migrate`
 5. **Load the sample users:** `npm run db:seed` imports the users in `db.json` (add `-- --dry-run` to preview first).
