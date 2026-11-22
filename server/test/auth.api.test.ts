@@ -193,8 +193,11 @@ describe('GET /auth/me', () => {
       expect((await api('DELETE', `/users/${created.body.id}`, undefined, headers)).status).toBe(200);
     });
 
-    it('deletes an account, clears its cookie, and invalidates every session', async () => {
+    it.each([false, true])('deletes an account with admin=%s, clears its cookie, and invalidates every session', async (isAdmin) => {
       const cookie = await signIn(server.baseUrl, credentials);
+      if (isAdmin) {
+        await admin.query('update users set admin = true where id = 1');
+      }
       const second = await login();
       const secondCookie = second.headers.getSetCookie()[0]!.split(';')[0]!;
       const response = await api('DELETE', '/users/1', undefined, { cookie });

@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
@@ -10,6 +11,7 @@ import { ConfirmDialogComponent } from '../shared/confirm-dialog/confirm-dialog.
 
 type PasswordField = 'currentPassword' | 'newPassword' | 'confirmPassword';
 type PasswordNotice = { type: 'success' | 'error', message: string };
+const DELETE_SUCCESS_MS = 3000;
 
 const matchingPasswords: ValidatorFn = (form: AbstractControl): ValidationErrors | null =>
   form.get('confirmPassword')?.value === form.get('newPassword')?.value ? null : { mismatch: true };
@@ -25,6 +27,7 @@ export class AccountComponent {
   private readonly session = inject(SessionStore);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly usersStore = inject(UsersStore);
 
   readonly profileForm = this.fb.nonNullable.group({
@@ -38,6 +41,8 @@ export class AccountComponent {
   readonly signedInEmail = computed(() => this.session.user()?.email ?? '');
   readonly isAdmin = computed(() => this.session.user()?.admin === true);
   readonly confirmingDelete = signal(false);
+  readonly deleteStatus = signal<'idle' | 'pending' | 'success'>('idle');
+  readonly deleteError = signal<string | null>(null);
   readonly passwordForm = this.fb.nonNullable.group({
     currentPassword: ['', [Validators.required, Validators.maxLength(128)]],
     newPassword: ['', [
@@ -172,10 +177,29 @@ export class AccountComponent {
   }
 
   deleteAccount(): void {
-    this.confirmingDelete.set(false);
     const user = this.session.user();
-    if (user) {
-      this.usersStore.remove(user.id);
+    if (!user || !this.confirmingDelete() || this.deleteStatus() !== 'idle') {
+      return;
+    }
+    this.deleteStatus.set('pending');
+    this.deleteError.set(null);
+    this.usersStore.deleteOwnAccount(user.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.deleteStatus.set('success');
+        const timer = setTimeout(() => this.router.navigate(['/login']), DELETE_SUCCESS_MS);
+        this.destroyRef.onDestroy(() => clearTimeout(timer));
+      },
+      error: () => {
+        this.deleteStatus.set('idle');
+        this.deleteError.set('Unable to delete your account. Please try again.');
+      },
+    });
+  }
+
+  cancelDelete(): void {
+    if (this.deleteStatus() === 'idle') {
+      this.confirmingDelete.set(false);
+      this.deleteError.set(null);
     }
   }
 }

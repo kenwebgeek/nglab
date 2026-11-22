@@ -10,6 +10,8 @@ export class ConfirmDialogComponent {
   readonly message = input.required<string>();
   readonly confirmLabel = input('Confirm');
   readonly cancelLabel = input('Cancel');
+  readonly status = input<'idle' | 'pending' | 'success'>('idle');
+  readonly errorMessage = input<string | null>(null);
 
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();
@@ -30,11 +32,13 @@ export class ConfirmDialogComponent {
   // Esc fires the native cancel event; the parent decides when to close
   onCancel(event: Event) {
     event.preventDefault();
-    this.cancelled.emit();
+    if (this.status() === 'idle') {
+      this.cancelled.emit();
+    }
   }
 
   onBackdropClick(event: MouseEvent) {
-    if (event.target === this.dialog().nativeElement) {
+    if (this.status() === 'idle' && event.target === this.dialog().nativeElement) {
       this.cancelled.emit();
     }
   }

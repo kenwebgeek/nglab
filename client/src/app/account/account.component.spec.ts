@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { SessionStore } from '../auth/state/session.store';
 import { User } from '../users/models/user.interface';
+import { UsersStore } from '../users/state/users.store';
 import { AccountComponent } from './account.component';
 
 const tony: User = {
@@ -52,25 +53,89 @@ describe('AccountComponent', () => {
     expect(fixture.nativeElement.querySelector('#account-access-heading').parentElement.textContent).toContain('Admin');
   });
 
-  it('confirms account deletion, then ends the session only after success', () => {
+  it('confirms deletion, shows success only after the response, and redirects after three seconds', () => {
+    jasmine.clock().install();
+    try {
+      const navigate = spyOn(TestBed.inject(Router), 'navigate');
+      const users = TestBed.inject(UsersStore);
+      users.load();
+      http.expectOne('http://localhost:3000/users').flush([tony]);
+      const section: HTMLElement = fixture.nativeElement.querySelector('section[aria-labelledby=delete-account-heading]');
+      expect(section.textContent).toContain('Delete account');
+      section.querySelector('button')!.click();
+      fixture.detectChanges();
+      const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog');
+      expect(dialog.open).toBeTrue();
+      expect(dialog.textContent).toContain('This action cannot be undone.');
+      http.expectNone('http://localhost:3000/users/1');
+
+      const confirm = Array.from(dialog.querySelectorAll('button')).find(button => button.textContent?.includes('Delete account'))!;
+      confirm.click();
+      component.deleteAccount();
+      fixture.detectChanges();
+      const request = http.expectOne('http://localhost:3000/users/1');
+      expect(request.request.method).toBe('DELETE');
+      expect(dialog.textContent).not.toContain('Your account has been deleted.');
+      expect(Array.from(dialog.querySelectorAll('button')).every(button => button.disabled)).toBeTrue();
+      dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+      expect(component.confirmingDelete()).toBeTrue();
+      expect(TestBed.inject(SessionStore).user()).toEqual(tony);
+      expect(users.users()).toEqual([tony]);
+      request.flush({});
+      fixture.detectChanges();
+      expect(dialog.querySelector('[role=status]')?.textContent).toContain('Your account has been deleted.');
+      expect(TestBed.inject(SessionStore).user()).toBeNull();
+      expect(users.users()).toEqual([]);
+      dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+      dialog.click();
+      expect(component.confirmingDelete()).toBeTrue();
+      expect(navigate).not.toHaveBeenCalled();
+      jasmine.clock().tick(2999);
+      expect(navigate).not.toHaveBeenCalled();
+      jasmine.clock().tick(1);
+      expect(navigate).toHaveBeenCalledWith(['/login']);
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+
+  it('keeps the session, shows an error in the dialog and allows a retry', () => {
     const navigate = spyOn(TestBed.inject(Router), 'navigate');
     component.confirmingDelete.set(true);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('dialog').open).toBeTrue();
-    component.deleteAccount();
-    const request = http.expectOne('http://localhost:3000/users/1');
-    expect(request.request.method).toBe('DELETE');
-    expect(TestBed.inject(SessionStore).user()).toEqual(tony);
-    request.flush({});
-    expect(TestBed.inject(SessionStore).user()).toBeNull();
-    expect(navigate).toHaveBeenCalledWith(['/login']);
-  });
-
-  it('keeps the session and shows an error when account deletion fails', () => {
     component.deleteAccount();
     http.expectOne('http://localhost:3000/users/1').flush({}, { status: 500, statusText: 'Server Error' });
+    fixture.detectChanges();
     expect(TestBed.inject(SessionStore).user()).toEqual(tony);
-    expect(component.notice()?.type).toBe('error');
+    expect(fixture.nativeElement.querySelector('dialog [role=alert]')?.textContent).toContain('Unable to delete your account');
+    expect(navigate).not.toHaveBeenCalled();
+    component.deleteAccount();
+    http.expectOne('http://localhost:3000/users/1').flush({});
+    expect(TestBed.inject(SessionStore).user()).toBeNull();
+  });
+
+  it('cancels account deletion without sending a request', () => {
+    component.confirmingDelete.set(true);
+    fixture.detectChanges();
+    const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog');
+    dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+    expect(component.confirmingDelete()).toBeFalse();
+    http.expectNone('http://localhost:3000/users/1');
+  });
+
+  it('cancels the redirect timer if the page is destroyed', () => {
+    jasmine.clock().install();
+    try {
+      const navigate = spyOn(TestBed.inject(Router), 'navigate');
+      component.confirmingDelete.set(true);
+      component.deleteAccount();
+      http.expectOne('http://localhost:3000/users/1').flush({});
+      fixture.destroy();
+      jasmine.clock().tick(3000);
+      expect(navigate).not.toHaveBeenCalled();
+    } finally {
+      jasmine.clock().uninstall();
+    }
   });
 
   it('updates the signed-in user without navigating away', () => {
