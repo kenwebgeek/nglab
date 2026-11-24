@@ -4,6 +4,7 @@ import { convertToParamMap } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { ResetPasswordPageComponent } from './reset-password-page.component';
+import { SessionStore } from '../../state/session.store';
 
 describe('ResetPasswordPageComponent', () => {
   let fixture: ComponentFixture<ResetPasswordPageComponent>;
@@ -32,6 +33,7 @@ describe('ResetPasswordPageComponent', () => {
   afterEach(() => http.verify());
 
   it('submits a valid new password with the token', () => {
+    const clearSession = spyOn(TestBed.inject(SessionStore), 'clear').and.callThrough();
     component.form.setValue({
       newPassword: 'NewPassword2!',
       confirmPassword: 'NewPassword2!',
@@ -46,6 +48,7 @@ describe('ResetPasswordPageComponent', () => {
     fixture.detectChanges();
 
     expect(component.resetComplete()).toBeTrue();
+    expect(clearSession).toHaveBeenCalled();
     expect(component.form.getRawValue()).toEqual({ newPassword: '', confirmPassword: '' });
     expect(fixture.nativeElement.textContent).toContain('Your password was reset');
   });
@@ -74,5 +77,17 @@ describe('ResetPasswordPageComponent', () => {
 
     expect(component.resetComplete()).toBeFalse();
     expect(component.error()).toContain('invalid or has expired');
+  });
+
+  it('shows a retryable error when the server is unavailable', () => {
+    component.form.setValue({ newPassword: 'NewPassword2!', confirmPassword: 'NewPassword2!' });
+    component.resetPassword();
+    http.expectOne('http://localhost:3000/auth/password-reset').flush(
+      {},
+      { status: 503, statusText: 'Service Unavailable' },
+    );
+
+    expect(component.resetComplete()).toBeFalse();
+    expect(component.error()).toBe('Unable to reset your password. Please try again.');
   });
 });

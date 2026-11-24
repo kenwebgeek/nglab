@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import type pg from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { createSmtpPasswordResetMailer } from '../src/auth/password-reset-mailer.js';
 import { call, createAdminPool, resetUsers, signIn, startServer, type TestServer } from './helpers.js';
 
 let server: TestServer;
@@ -377,6 +379,56 @@ describe('PUT /auth/password', () => {
 });
 
 describe('password reset', () => {
+  it.runIf(process.env['MAILPIT_INTEGRATION'] === '1')('sends a reset email through Mailpit and accepts its link', async () => {
+    const email = `reset-${randomUUID()}@example.test`;
+    const mailpit = 'http://127.0.0.1:8025';
+    const smtpServer = await startServer(undefined, undefined, {
+      realAuth: true,
+      passwordResetMailer: createSmtpPasswordResetMailer({
+        host: '127.0.0.1',
+        port: 1025,
+        secure: false,
+        from: 'NgLab <no-reply@example.test>',
+      }),
+    });
+    let messageId: string | undefined;
+    try {
+      const cookie = await signIn(smtpServer.baseUrl, { email, password: credentials.password });
+      expect((await call(smtpServer.baseUrl, 'POST', '/auth/password-reset/request', { email })).status).toBe(204);
+
+      const inbox = await fetch(`${mailpit}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`);
+      expect(inbox.status).toBe(200);
+      const { messages } = await inbox.json() as { messages: { ID: string; Subject: string }[] };
+      expect(messages).toHaveLength(1);
+      messageId = messages[0]!.ID;
+      expect(messages[0]!.Subject).toBe('Reset your NgLab password');
+
+      const response = await fetch(`${mailpit}/api/v1/message/${encodeURIComponent(messageId)}`);
+      expect(response.status).toBe(200);
+      const message = await response.json() as { Text: string };
+      const resetUrl = message.Text.match(/http:\/\/localhost:4200\/reset-password\?token=[\w-]+/)?.[0];
+      expect(resetUrl).toBeDefined();
+      const token = new URL(resetUrl!).searchParams.get('token');
+      const newPassword = 'replacement password 3!';
+      expect((await call(smtpServer.baseUrl, 'POST', '/auth/password-reset', { token, newPassword })).status).toBe(204);
+      expect((await call(smtpServer.baseUrl, 'GET', '/auth/me', undefined, { cookie })).status).toBe(401);
+      expect((await call(smtpServer.baseUrl, 'POST', '/auth/login', { email, password: newPassword })).status).toBe(200);
+    } finally {
+      try {
+        if (messageId) {
+          const deleted = await fetch(`${mailpit}/api/v1/messages`, {
+            method: 'DELETE',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ IDs: [messageId] }),
+          });
+          expect(deleted.status).toBe(200);
+        }
+      } finally {
+        await smtpServer.close();
+      }
+    }
+  });
+
   it('emails a one-time token that resets the password and revokes every session', async () => {
     const firstCookie = await signIn(server.baseUrl, credentials);
     const secondCookie = (await login()).headers.getSetCookie()[0]!.split(';')[0]!;
@@ -417,6 +469,52 @@ describe('password reset', () => {
     expect(response.text).toBe('');
     expect(server.passwordResetEmails).toEqual([]);
     expect((await admin.query('select count(*)::int as n from password_reset_tokens')).rows[0].n).toBe(0);
+  });
+
+  it('invalidates an outstanding reset link when the user changes their password', async () => {
+    const cookie = await signIn(server.baseUrl, credentials);
+    await api('POST', '/auth/password-reset/request', { email: credentials.email });
+    const token = new URL(server.passwordResetEmails[0]!.resetUrl).searchParams.get('token');
+
+    expect((await api('PUT', '/auth/password', {
+      currentPassword: credentials.password,
+      newPassword: 'new secure password 2!',
+    }, { cookie })).status).toBe(204);
+    expect((await api('POST', '/auth/password-reset', {
+      token, newPassword: 'replacement password 3!',
+    })).status).toBe(400);
+    expect((await login({ ...credentials, password: 'new secure password 2!' })).status).toBe(200);
+  });
+
+  it('invalidates an outstanding reset link when an admin sets the password', async () => {
+    const adminCookie = await signIn(server.baseUrl, credentials);
+    await admin.query("update users set admin = true where email = 'ada@example.com'");
+    const other = { email: 'other@example.com', password: credentials.password };
+    const otherCookie = await signIn(server.baseUrl, other);
+    const user = (await api('GET', '/auth/me', undefined, { cookie: otherCookie })).body;
+    await api('POST', '/auth/password-reset/request', { email: other.email });
+    const token = new URL(server.passwordResetEmails[0]!.resetUrl).searchParams.get('token');
+
+    expect((await api('PUT', `/users/${user.id}`, {
+      ...user, newPassword: 'new secure password 2!',
+    }, { cookie: adminCookie })).status).toBe(200);
+    expect((await api('POST', '/auth/password-reset', {
+      token, newPassword: 'replacement password 3!',
+    })).status).toBe(400);
+    expect((await login({ email: other.email, password: 'new secure password 2!' })).status).toBe(200);
+  });
+
+  it('only accepts one of two concurrent uses of the same reset link', async () => {
+    await signIn(server.baseUrl, credentials);
+    await api('POST', '/auth/password-reset/request', { email: credentials.email });
+    const token = new URL(server.passwordResetEmails[0]!.resetUrl).searchParams.get('token');
+
+    const responses = await Promise.all([
+      api('POST', '/auth/password-reset', { token, newPassword: 'new secure password 2!' }),
+      api('POST', '/auth/password-reset', { token, newPassword: 'replacement password 3!' }),
+    ]);
+
+    expect(responses.map((response) => response.status).sort()).toEqual([204, 400]);
   });
 
   it('rejects an expired token without changing the password', async () => {

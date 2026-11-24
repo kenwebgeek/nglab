@@ -27,10 +27,26 @@ export function createPasswordResetRepository(db: Db, ttlMs: number = PASSWORD_R
 
     async resetPassword(token: string, passwordHash: string): Promise<boolean> {
       return db.transaction(async (tx) => {
+        const tokenHash = hashToken(token);
+        const [candidate] = await tx.select({ userId: passwordResetTokens.userId })
+          .from(passwordResetTokens)
+          .where(and(eq(passwordResetTokens.tokenHash, tokenHash), gt(passwordResetTokens.expiresAt, new Date())));
+        if (!candidate) {
+          return false;
+        }
+
+        const [account] = await tx.select({ userId: accounts.userId })
+          .from(accounts)
+          .where(eq(accounts.userId, candidate.userId))
+          .for('update');
+        if (!account) {
+          return false;
+        }
+
         const [consumed] = await tx
           .delete(passwordResetTokens)
           .where(and(
-            eq(passwordResetTokens.tokenHash, hashToken(token)),
+            eq(passwordResetTokens.tokenHash, tokenHash),
             gt(passwordResetTokens.expiresAt, new Date()),
           ))
           .returning({ userId: passwordResetTokens.userId });
@@ -38,14 +54,9 @@ export function createPasswordResetRepository(db: Db, ttlMs: number = PASSWORD_R
           return false;
         }
 
-        const [account] = await tx
-          .update(accounts)
+        await tx.update(accounts)
           .set({ passwordHash, updatedAt: new Date() })
-          .where(eq(accounts.userId, consumed.userId))
-          .returning({ userId: accounts.userId });
-        if (!account) {
-          return false;
-        }
+          .where(eq(accounts.userId, consumed.userId));
 
         await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, consumed.userId));
         await tx.delete(sessions).where(eq(sessions.userId, consumed.userId));

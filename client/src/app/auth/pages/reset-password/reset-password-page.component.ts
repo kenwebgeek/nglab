@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   AbstractControl,
   FormBuilder,
@@ -10,6 +11,7 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlertsComponent } from '../../../shared/alerts/alerts.component';
 import { AuthService } from '../../services/auth.service';
+import { SessionStore } from '../../state/session.store';
 
 const matchingPasswords: ValidatorFn = (form: AbstractControl): ValidationErrors | null =>
   form.get('confirmPassword')?.value === form.get('newPassword')?.value ? null : { mismatch: true };
@@ -23,6 +25,7 @@ const matchingPasswords: ValidatorFn = (form: AbstractControl): ValidationErrors
 export class ResetPasswordPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly session = inject(SessionStore);
   private readonly route = inject(ActivatedRoute);
 
   readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
@@ -60,11 +63,16 @@ export class ResetPasswordPageComponent {
       newPassword: this.form.controls.newPassword.value,
     }).subscribe({
       next: () => {
+        this.session.clear();
         this.form.reset();
         this.resetComplete.set(true);
       },
-      error: () => {
-        this.error.set('This reset link is invalid or has expired. Request a new one.');
+      error: (error: unknown) => {
+        this.error.set(
+          error instanceof HttpErrorResponse && error.status === 400 && error.error?.error === 'invalid_reset_token'
+            ? 'This reset link is invalid or has expired. Request a new one.'
+            : 'Unable to reset your password. Please try again.',
+        );
       },
     }).add(() => this.submitting.set(false));
   }
