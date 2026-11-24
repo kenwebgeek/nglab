@@ -6,6 +6,11 @@ import { createApp } from '../src/app.js';
 import * as schema from '../src/db/schema.js';
 import { createAccountsRepository } from '../src/accounts/repository.js';
 import { createSessionsRepository } from '../src/auth/sessions-repository.js';
+import {
+  type PasswordResetEmail,
+  type PasswordResetMailer,
+} from '../src/auth/password-reset-mailer.js';
+import { createPasswordResetRepository } from '../src/auth/password-reset-repository.js';
 import type { RateLimitOptions } from '../src/rate-limit.js';
 import { createUsersRepository } from '../src/users/repository.js';
 import { getTestUrls } from './test-env.js';
@@ -22,6 +27,7 @@ export interface TestServer {
   baseUrl: string;
   // Every log line the API wrote, so tests can assert nothing sensitive was logged
   logs: string[];
+  passwordResetEmails: PasswordResetEmail[];
   close: () => Promise<void>;
 }
 
@@ -30,7 +36,10 @@ export interface StartServerOptions {
   // counts as signed in, so the users tests don't need a login for each call
   realAuth?: boolean;
   loginRateLimit?: RateLimitOptions;
+  passwordResetRateLimit?: RateLimitOptions;
   sessionTtlMs?: number;
+  passwordResetTtlMs?: number;
+  passwordResetMailer?: PasswordResetMailer;
 }
 
 const testUser = {
@@ -56,18 +65,28 @@ export async function startServer(
   const realSessions = createSessionsRepository(db, options.sessionTtlMs);
   const logs: string[] = [];
   const logger = pino({ level: 'info' }, { write: (line: string) => void logs.push(line) });
+  const passwordResetEmails: PasswordResetEmail[] = [];
+  const passwordResetMailer = options.passwordResetMailer ?? {
+    async sendPasswordReset(email: PasswordResetEmail) {
+      passwordResetEmails.push(email);
+    },
+  };
 
   const app = createApp({
     users: createUsersRepository(db),
     accounts: createAccountsRepository(db),
     sessions: options.realAuth ? realSessions : { ...realSessions, findUser: async () => testUser },
+    passwordReset: createPasswordResetRepository(db, options.passwordResetTtlMs),
+    passwordResetMailer,
     signupRateLimit,
     loginRateLimit: options.loginRateLimit ?? { windowMs: 60_000, limit: 10_000 },
+    passwordResetRateLimit: options.passwordResetRateLimit ?? { windowMs: 60_000, limit: 10_000 },
     secureCookies: false,
     checkDatabase: async () => {
       await pool.query('select 1');
     },
     corsOrigin: 'http://localhost:4200',
+    appUrl: 'http://localhost:4200',
     logger,
   });
 
@@ -79,6 +98,7 @@ export async function startServer(
   return {
     baseUrl: `http://127.0.0.1:${port}`,
     logs,
+    passwordResetEmails,
     close: async () => {
       await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
       await pool.end();
@@ -112,9 +132,9 @@ export function createAppPool(): pg.Pool {
   return new pg.Pool({ connectionString: getTestUrls().app });
 }
 
-// Accounts and sessions reference users, so they are cleared together
+// Account, session and reset-token rows reference users, so they are cleared together
 export async function resetUsers(admin: pg.Pool): Promise<void> {
-  await admin.query('truncate users, accounts, sessions restart identity');
+  await admin.query('truncate users, accounts, sessions, password_reset_tokens restart identity');
 }
 
 // Signs up and logs in, returning the Cookie header value for later requests

@@ -7,6 +7,8 @@ import { createAccountsRouter } from './accounts/routes.js';
 import { requireAuth, requireSameOrigin } from './auth/middleware.js';
 import { createAuthRouter } from './auth/routes.js';
 import type { SessionsRepository } from './auth/sessions-repository.js';
+import type { PasswordResetRepository } from './auth/password-reset-repository.js';
+import type { PasswordResetMailer } from './auth/password-reset-mailer.js';
 import type { RateLimitOptions } from './rate-limit.js';
 import type { AccountsRepository } from './accounts/repository.js';
 import { createUsersRouter } from './users/routes.js';
@@ -16,14 +18,18 @@ export interface AppDependencies {
   users: UsersRepository;
   accounts: AccountsRepository;
   sessions: SessionsRepository;
+  passwordReset: PasswordResetRepository;
+  passwordResetMailer?: PasswordResetMailer;
   // Defaults to 10 sign-ups per client per 15 minutes
   signupRateLimit?: RateLimitOptions;
   // Failed logins only; defaults to 10 per client per 15 minutes
   loginRateLimit?: RateLimitOptions;
+  passwordResetRateLimit?: RateLimitOptions;
   secureCookies: boolean;
   // Rejects when the database is unreachable
   checkDatabase: () => Promise<void>;
   corsOrigin: string;
+  appUrl: string;
   logger: Logger;
 }
 
@@ -62,8 +68,13 @@ export function createApp(deps: AppDependencies): Express {
     createAuthRouter({
       accounts: deps.accounts,
       sessions: deps.sessions,
+      passwordReset: deps.passwordReset,
+      passwordResetMailer: deps.passwordResetMailer,
       loginRateLimit: deps.loginRateLimit,
+      passwordResetRateLimit: deps.passwordResetRateLimit,
       secureCookies: deps.secureCookies,
+      appUrl: deps.appUrl,
+      logger: deps.logger,
     }),
   );
   app.use('/users', requireAuth(deps.sessions), createUsersRouter(deps.users, deps.secureCookies));

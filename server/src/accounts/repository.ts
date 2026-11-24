@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { accounts, sessions, users, type UserRow } from '../db/schema.js';
+import { accounts, passwordResetTokens, sessions, users, type UserRow } from '../db/schema.js';
 import { toUserDto, type Db, type UserDto } from '../users/repository.js';
 import type { AccountInput } from './validation.js';
 
@@ -45,6 +45,7 @@ export function createAccountsRepository(db: Db) {
           return false;
         }
 
+        await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
         await tx.delete(sessions).where(eq(sessions.userId, userId));
         return true;
       });
