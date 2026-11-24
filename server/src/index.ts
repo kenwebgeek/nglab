@@ -4,6 +4,8 @@ import { config } from './config.js';
 import { db, pool } from './db/client.js';
 import { createAccountsRepository } from './accounts/repository.js';
 import { createSessionsRepository } from './auth/sessions-repository.js';
+import { createPasswordResetRepository } from './auth/password-reset-repository.js';
+import { createSmtpPasswordResetMailer } from './auth/password-reset-mailer.js';
 import { createUsersRepository } from './users/repository.js';
 
 const logger = pino({ level: config.logLevel });
@@ -12,11 +14,14 @@ const app = createApp({
   users: createUsersRepository(db),
   accounts: createAccountsRepository(db),
   sessions: createSessionsRepository(db),
+  passwordReset: createPasswordResetRepository(db),
+  passwordResetMailer: config.smtp ? createSmtpPasswordResetMailer(config.smtp) : undefined,
   secureCookies: config.secureCookies,
   checkDatabase: async () => {
     await pool.query('select 1');
   },
   corsOrigin: config.corsOrigin,
+  appUrl: config.appUrl,
   logger,
 });
 

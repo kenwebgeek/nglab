@@ -1,7 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema.js';
-import { accounts, sessions, users, type UserRow } from '../db/schema.js';
+import { accounts, passwordResetTokens, sessions, users, type UserRow } from '../db/schema.js';
 import { HttpError } from '../http-error.js';
 import type { ManagedUserInput } from './validation.js';
 
@@ -64,6 +64,7 @@ export function createUsersRepository(db: Db) {
           target: accounts.userId,
           set: { passwordHash, updatedAt: new Date() },
         });
+        await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, id));
         await tx.delete(sessions).where(eq(sessions.userId, id));
         return toUserDto(updated!);
       });
