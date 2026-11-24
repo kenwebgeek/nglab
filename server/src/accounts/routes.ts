@@ -4,11 +4,13 @@ import type { RateLimitOptions } from '../rate-limit.js';
 import type { AccountsRepository } from './repository.js';
 import { hashPassword } from './password.js';
 import { accountInputSchema } from './validation.js';
+import type { EmailVerification } from '../auth/email-verification.js';
 
 export const DEFAULT_SIGNUP_RATE_LIMIT: RateLimitOptions = { windowMs: 15 * 60 * 1000, limit: 10 };
 
 export function createAccountsRouter(
   accounts: AccountsRepository,
+  emailVerification: EmailVerification,
   signupRateLimit: RateLimitOptions = DEFAULT_SIGNUP_RATE_LIMIT,
 ): Router {
   const router = Router();
@@ -23,7 +25,9 @@ export function createAccountsRouter(
 
   router.post('/', limiter, async (req, res) => {
     const { password, ...profile } = accountInputSchema.parse(req.body);
-    res.status(201).json(await accounts.create(profile, await hashPassword(password)));
+    const user = await accounts.create(profile, await hashPassword(password));
+    await emailVerification.send(user.id);
+    res.status(201).json(user);
   });
 
   return router;

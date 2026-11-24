@@ -10,16 +10,16 @@ export function createAccountsRepository(db: Db) {
     async create(profile: Omit<AccountInput, 'password'>, passwordHash: string): Promise<UserDto> {
       return db.transaction(async (tx) => {
         const [user] = await tx.insert(users).values(profile).returning();
-        await tx.insert(accounts).values({ userId: user!.id, passwordHash });
+        await tx.insert(accounts).values({ userId: user!.id, passwordHash, emailVerified: false });
         return toUserDto(user!);
       });
     },
 
     // The user with this email and their password hash; null when there is no such user or they have no account.
     // The email column is case-insensitive (citext), so the lookup is too.
-    async findCredentials(email: string): Promise<{ user: UserRow; passwordHash: string } | null> {
+    async findCredentials(email: string): Promise<{ user: UserRow; passwordHash: string; emailVerified: boolean } | null> {
       const [row] = await db
-        .select({ user: users, passwordHash: accounts.passwordHash })
+        .select({ user: users, passwordHash: accounts.passwordHash, emailVerified: accounts.emailVerified })
         .from(users)
         .innerJoin(accounts, eq(accounts.userId, users.id))
         .where(eq(users.email, email));

@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import type pg from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createSmtpPasswordResetMailer } from '../src/auth/password-reset-mailer.js';
-import { call, createAdminPool, resetUsers, signIn, startServer, type TestServer } from './helpers.js';
+import { createSmtpVerificationMailer } from '../src/auth/email-verification.js';
+import { hashPassword } from '../src/accounts/password.js';
+import { call, createAdminPool, resetUsers, signIn, startServer, verifySignup, type TestServer } from './helpers.js';
 
 let server: TestServer;
 let admin: pg.Pool;
@@ -28,11 +31,13 @@ beforeEach(async () => {
   await resetUsers(admin);
   server.logs.length = 0;
   server.passwordResetEmails.length = 0;
+  server.verificationEmails.length = 0;
 });
 
 describe('POST /auth/login', () => {
   it('signs in, returns the user and sets a hardened session cookie', async () => {
     await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+    await verifySignup(server.baseUrl, credentials.email);
     const response = await login();
 
     expect(response.status).toBe(200);
@@ -54,8 +59,163 @@ describe('POST /auth/login', () => {
     expect(response.text).not.toContain(credentials.password);
   });
 
+  describe('email verification', () => {
+    const signup = () => api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+    const tokenFrom = (url: string) => new URL(url).searchParams.get('token');
+    const verify = (token: string | null) => api('POST', '/auth/email-verification', { token });
+
+    it('requires verification before login and accepts a link only once', async () => {
+      expect((await signup()).status).toBe(201);
+      expect(server.verificationEmails).toHaveLength(1);
+      const token = tokenFrom(server.verificationEmails[0]!.verificationUrl);
+      const stored = await admin.query('select token_hash from email_verification_tokens');
+      expect(stored.rows[0].token_hash).toMatch(/^[0-9a-f]{64}$/);
+      expect(stored.rows[0].token_hash).not.toBe(token);
+      expect((await login({ ...credentials, password: 'wrong password!' })).status).toBe(401);
+      const unverified = await login();
+      expect(unverified.status).toBe(403);
+      expect(unverified.body.error).toBe('email_unverified');
+      expect(await sessionCount()).toBe(0);
+      expect((await verify(token)).status).toBe(204);
+      expect((await verify(token)).status).toBe(400);
+      expect((await login()).status).toBe(200);
+      expect(server.logs.join('\n')).not.toContain(token);
+    });
+
+    it('resends without disclosing account state and invalidates the previous link', async () => {
+      await signup();
+      const first = tokenFrom(server.verificationEmails[0]!.verificationUrl);
+      const unknown = await api('POST', '/auth/email-verification/request', { email: 'unknown@example.com' });
+      const resent = await api('POST', '/auth/email-verification/request', { email: credentials.email });
+      expect(unknown.status).toBe(204);
+      expect(unknown.text).toBe(resent.text);
+      expect(resent.status).toBe(204);
+      const second = tokenFrom(server.verificationEmails[1]!.verificationUrl);
+      expect(first).not.toBe(second);
+      expect((await verify(first)).status).toBe(400);
+      expect((await verify(second)).status).toBe(204);
+      expect((await api('POST', '/auth/email-verification/request', { email: credentials.email })).status).toBe(204);
+      expect(server.verificationEmails).toHaveLength(2);
+    });
+
+    it('rejects expired links and links sent to a previous email address', async () => {
+      await signup();
+      const first = tokenFrom(server.verificationEmails[0]!.verificationUrl);
+      await admin.query("update email_verification_tokens set expires_at = now() - interval '1 second'");
+      expect((await verify(first)).status).toBe(400);
+      await api('POST', '/auth/email-verification/request', { email: credentials.email });
+      const second = tokenFrom(server.verificationEmails[1]!.verificationUrl);
+      await admin.query("update users set email = 'new@example.com' where email = $1", [credentials.email]);
+      expect((await verify(second)).status).toBe(400);
+      expect((await login({ ...credentials, email: 'new@example.com' })).status).toBe(403);
+    });
+
+    it('allows only one concurrent use of a link', async () => {
+      await signup();
+      const token = tokenFrom(server.verificationEmails[0]!.verificationUrl);
+      const responses = await Promise.all([verify(token), verify(token)]);
+      expect(responses.map((response) => response.status).sort()).toEqual([204, 400]);
+    });
+
+    it('keeps new accounts unverified and logs delivery errors without revealing their address', async () => {
+      const failing = await startServer(undefined, undefined, {
+        realAuth: true,
+        verificationMailer: { async sendVerification() { throw new Error('SMTP failed'); } },
+      });
+      try {
+        expect((await call(failing.baseUrl, 'POST', '/accounts', {
+          ...credentials, firstName: 'Ada', lastName: 'Lovelace',
+        })).status).toBe(201);
+        expect((await call(failing.baseUrl, 'POST', '/auth/login', credentials)).status).toBe(403);
+        expect((await call(failing.baseUrl, 'POST', '/auth/email-verification/request', { email: credentials.email })).status).toBe(204);
+        expect((await admin.query('select count(*)::int as n from email_verification_tokens')).rows[0].n).toBe(0);
+        expect(failing.logs.join('\n')).toContain('Verification email failed');
+        expect(failing.logs.join('\n')).not.toContain(credentials.email);
+      } finally {
+        await failing.close();
+      }
+    });
+
+    it('migrates existing accounts as verified but defaults new accounts to unverified', async () => {
+      const client = await admin.connect();
+      try {
+        await client.query('begin');
+        await client.query('alter table accounts drop column email_verified');
+        const passwordHash = await hashPassword(credentials.password);
+        const user = await client.query("insert into users (first_name, last_name, email) values ('Ada', 'Lovelace', $1) returning id", [credentials.email]);
+        await client.query('insert into accounts (user_id, password_hash) values ($1, $2)', [user.rows[0].id, passwordHash]);
+        const sql = await readFile(new URL('../drizzle/0009_brave_iron_man.sql', import.meta.url), 'utf8');
+        const statements = sql.split('--> statement-breakpoint').map((part) => part.trim())
+          .filter((part) => part.startsWith('ALTER TABLE "accounts"'));
+        expect(statements).toHaveLength(2);
+        for (const statement of statements) await client.query(statement);
+        expect((await client.query('select email_verified from accounts')).rows[0].email_verified).toBe(true);
+        const next = await client.query("insert into users (first_name, last_name, email) values ('Grace', 'Hopper', 'grace@example.com') returning id");
+        await client.query('insert into accounts (user_id, password_hash) values ($1, $2)', [next.rows[0].id, passwordHash]);
+        expect((await client.query('select email_verified from accounts where user_id = $1', [next.rows[0].id])).rows[0].email_verified).toBe(false);
+      } finally {
+        await client.query('rollback');
+        client.release();
+      }
+    });
+
+    it('rate limits resend and verification requests together', async () => {
+      const limited = await startServer(undefined, undefined, { verificationRateLimit: { windowMs: 60_000, limit: 2 } });
+      try {
+        const request = () => call(limited.baseUrl, 'POST', '/auth/email-verification/request', { email: 'unknown@example.com' });
+        expect((await request()).status).toBe(204);
+        expect((await call(limited.baseUrl, 'POST', '/auth/email-verification', { token: 'invalid' })).status).toBe(400);
+        expect((await request()).status).toBe(429);
+      } finally {
+        await limited.close();
+      }
+    });
+
+    it.runIf(process.env['MAILPIT_INTEGRATION'] === '1')('sends an actual verification email to Mailpit', async () => {
+      const email = `verify-${randomUUID()}@example.test`;
+      const smtp = await startServer(undefined, undefined, {
+        realAuth: true,
+        verificationMailer: createSmtpVerificationMailer({
+          host: '127.0.0.1', port: 1025, secure: false, from: 'NgLab <no-reply@example.test>',
+        }),
+      });
+      const mailpit = 'http://127.0.0.1:8025';
+      let messageId: string | undefined;
+      try {
+        expect((await call(smtp.baseUrl, 'POST', '/accounts', {
+          email, password: credentials.password, firstName: 'Ada', lastName: 'Lovelace',
+        })).status).toBe(201);
+        const inbox = await fetch(`${mailpit}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`);
+        expect(inbox.status).toBe(200);
+        const { messages } = await inbox.json() as { messages: { ID: string; Subject: string }[] };
+        expect(messages).toHaveLength(1);
+        messageId = messages[0]!.ID;
+        expect(messages[0]!.Subject).toBe('Verify your NgLab email address');
+        const response = await fetch(`${mailpit}/api/v1/message/${encodeURIComponent(messageId)}`);
+        expect(response.status).toBe(200);
+        const message = await response.json() as { Text: string };
+        const url = message.Text.match(/http:\/\/localhost:4200\/verify-email\?token=[\w-]+/)?.[0];
+        expect(url).toBeDefined();
+        expect((await call(smtp.baseUrl, 'POST', '/auth/email-verification', { token: tokenFrom(url!) })).status).toBe(204);
+        expect((await call(smtp.baseUrl, 'POST', '/auth/login', { email, password: credentials.password })).status).toBe(200);
+      } finally {
+        try {
+          if (messageId) {
+            const deleted = await fetch(`${mailpit}/api/v1/messages`, {
+              method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ IDs: [messageId] }),
+            });
+            expect(deleted.status).toBe(200);
+          }
+        } finally {
+          await smtp.close();
+        }
+      }
+    });
+  });
+
   it('stores only a hash of the token', async () => {
     await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+    await verifySignup(server.baseUrl, credentials.email);
     const response = await login();
     const token = response.headers.getSetCookie()[0]!.split(';')[0]!.slice('session='.length);
 
@@ -69,11 +229,13 @@ describe('POST /auth/login', () => {
 
   it('matches the email case-insensitively', async () => {
     await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+    await verifySignup(server.baseUrl, credentials.email);
     expect((await login({ ...credentials, email: '  ADA@Example.COM ' })).status).toBe(200);
   });
 
   it('gives every failure the same 401, whether the email, the password or the account is wrong', async () => {
     await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+    await verifySignup(server.baseUrl, credentials.email);
     // A user created through the users API has no account
     await admin.query("insert into users (first_name, last_name, email) values ('Tony', 'Stark', 'tony@avengers.com')");
 
@@ -103,6 +265,7 @@ describe('POST /auth/login', () => {
 
   it('removes expired sessions when someone logs in', async () => {
     await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+    await verifySignup(server.baseUrl, credentials.email);
     await admin.query(
       "insert into sessions (token_hash, user_id, expires_at) values ('stale', 1, now() - interval '1 day')",
     );
@@ -114,6 +277,7 @@ describe('POST /auth/login', () => {
 
   it('never logs the password or the session token', async () => {
     await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+    await verifySignup(server.baseUrl, credentials.email);
     const response = await login();
     const token = response.headers.getSetCookie()[0]!.split(';')[0]!.slice('session='.length);
     await login({ ...credentials, password: 'wrong password!' });
@@ -130,6 +294,7 @@ describe('POST /auth/login', () => {
     });
     try {
       await call(limited.baseUrl, 'POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+      await verifySignup(limited.baseUrl, credentials.email);
       const attempt = (password: string) =>
         call(limited.baseUrl, 'POST', '/auth/login', { email: credentials.email, password });
 
@@ -264,6 +429,8 @@ describe('PUT /auth/password', () => {
     }, { cookie: adminCookie });
     expect(updated.status).toBe(200);
     expect(updated.text).not.toContain(defaultPassword);
+    expect((await api('POST', '/auth/login', { email: created.body.email, password: defaultPassword })).status).toBe(403);
+    await verifySignup(server.baseUrl, created.body.email);
     const signedIn = await api('POST', '/auth/login', { email: created.body.email, password: defaultPassword });
     expect(signedIn.status).toBe(200);
     const cookie = signedIn.headers.getSetCookie()[0]!.split(';')[0]!;
@@ -528,6 +695,7 @@ describe('password reset', () => {
         firstName: 'Ada',
         lastName: 'Lovelace',
       });
+      await verifySignup(expiring.baseUrl, credentials.email);
       await call(expiring.baseUrl, 'POST', '/auth/password-reset/request', { email: credentials.email });
       const token = new URL(expiring.passwordResetEmails[0]!.resetUrl).searchParams.get('token')!;
       const reset = await call(expiring.baseUrl, 'POST', '/auth/password-reset', {
@@ -632,6 +800,7 @@ describe('cross-origin requests', () => {
 
   it('refuses state-changing requests from another origin', async () => {
     await api('POST', '/accounts', { ...credentials, firstName: 'Ada', lastName: 'Lovelace' });
+    await verifySignup(server.baseUrl, credentials.email);
     const response = await api('POST', '/auth/login', credentials, { origin: 'http://evil.example' });
     expect(response.status).toBe(403);
     expect(response.body.error).toBe('forbidden_origin');

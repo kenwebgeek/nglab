@@ -1,0 +1,18 @@
+<section aria-labelledby="verify-heading" class="flex w-full max-w-[480px] flex-col gap-6 rounded-[14px] border border-solid border-[#e2e8f0] bg-white p-6 sm:p-10 dark:border-[#2c3850] dark:bg-[#131c2d]">
+  <h1 id="verify-heading" class="m-0 text-[30px] font-semibold text-[#172033] dark:text-[#f3f5fc]">Verify your email</h1>
+  @switch (status()) {
+    @case ('pending') { <p role="status">Verifying your email…</p> }
+    @case ('verified') {
+      <app-alerts alert="success" message="Your email has been verified. You can now log in." />
+      <a routerLink="/login" class="font-semibold text-[#4f46e5] dark:text-[#a99aff]">Continue to login</a>
+    }
+    @case ('invalid') {
+      <app-alerts alert="error" message="This link is invalid or has expired. Request a new verification email." />
+      <a routerLink="/resend-verification" class="font-semibold text-[#4f46e5] dark:text-[#a99aff]">Request another email</a>
+    }
+    @case ('error') {
+      <app-alerts alert="error" message="Unable to verify your email. Please try again." />
+      <a routerLink="/resend-verification" class="font-semibold text-[#4f46e5] dark:text-[#a99aff]">Request another email</a>
+    }
+  }
+</section>

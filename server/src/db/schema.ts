@@ -45,6 +45,7 @@ export const accounts = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     // Self-describing scrypt hash (see accounts/password.ts); never the password itself
     passwordHash: text('password_hash').notNull(),
+    emailVerified: boolean('email_verified').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -81,4 +82,15 @@ export const passwordResetTokens = pgTable(
     index('password_reset_tokens_user_id_idx').on(table.userId),
     index('password_reset_tokens_expires_at_idx').on(table.expiresAt),
   ],
+);
+
+export const emailVerificationTokens = pgTable(
+  'email_verification_tokens',
+  {
+    userId: integer('user_id').primaryKey().references(() => accounts.userId, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique(),
+    email: text('email').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [index('email_verification_tokens_expires_at_idx').on(table.expiresAt)],
 );

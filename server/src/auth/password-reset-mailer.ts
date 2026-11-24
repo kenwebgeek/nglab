@@ -19,14 +19,17 @@ export interface SmtpOptions {
   from: string;
 }
 
-export function createSmtpPasswordResetMailer(options: SmtpOptions): PasswordResetMailer {
-  const transport = createTransport({
+export function createSmtpTransport(options: SmtpOptions) {
+  return createTransport({
     host: options.host,
     port: options.port,
     secure: options.secure,
     auth: options.user ? { user: options.user, pass: options.password } : undefined,
   });
+}
 
+export function createSmtpPasswordResetMailer(options: SmtpOptions): PasswordResetMailer {
+  const transport = createSmtpTransport(options);
   return {
     async sendPasswordReset({ to, resetUrl, expiresAt }) {
       const expiresInMinutes = Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / 60_000));
