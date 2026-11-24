@@ -34,6 +34,17 @@ Run all the commands below from the repo root. The root scripts (`npm start`, `n
 5. **Load the sample users:** `npm run db:seed` imports the users in `db.json` (add `-- --dry-run` to preview first).
 6. **Start everything:** `npm run dev` starts the database (if it isn't running), the API at `http://localhost:3000` and the app at `http://localhost:4200` together, with colored `[api]` and `[client]` log prefixes. Press Ctrl+C once to stop both. To run them separately, use `npm run api` and `npm start` in two terminals.
 
+### Local password-reset email testing
+
+The password-reset feature is a prerequisite for this flow; it is not yet on `develop`. Once available and its database migration has been applied, you can use the optional Mailpit inbox to test without sending real email:
+
+1. Start Docker and run `npm run mail:up`. Mailpit listens only on localhost, with SMTP on port 1025 and the web inbox at [http://localhost:8025](http://localhost:8025). It captures messages instead of delivering them to recipients.
+2. In `server/.env`, set `APP_URL=http://localhost:4200`, `SMTP_HOST=127.0.0.1`, `SMTP_PORT=1025`, `SMTP_SECURE=false`, and `SMTP_FROM=NgLab <no-reply@example.test>`. Leave `SMTP_USER` and `SMTP_PASSWORD` unset. Restart the API after changing its configuration. These settings are for local testing only, not production.
+3. Start the app, create an account, and request a password reset for its email address. Open the message in the Mailpit inbox, follow the reset link, choose a new password, and sign in with it.
+4. Run `npm run mail:down` to stop the inbox. `npm run mail:test` runs a local SMTP/inbox smoke test and requires `curl`.
+
+Mailpit is not started by `npm run dev` or the database commands. Messages are temporary and are deleted when Mailpit stops; the inbox contains reset links, so do not expose it or use real production credentials. When Mailpit is stopped, a reset request still returns the same response for known and unknown accounts; check API logs for delivery errors.
+
 ## Git Flow
 
 `main` contains production-ready code and `develop` is the integration branch. All new features start from `develop`:
@@ -65,6 +76,8 @@ Open pull requests from `feature/*` branches into `develop`. Release branches us
 ### Authorization
 
 Users can manage and delete their own account. Admins can also create, edit, and delete user profiles and change their admin role. When editing another non-admin user, an admin can optionally set a password; this creates login credentials if needed and invalidates the user's existing sessions. Admins cannot set passwords for admins, and users can change their own passwords on My account. Profiles created by an admin do not have login credentials until a password is set.
+
+On My account, deleting an account requires confirmation. After deletion succeeds, all its sessions are invalidated, a confirmation appears briefly, and the user is redirected to login. Failed deletions leave the account signed in and can be retried.
 
 The role migration marks the existing user with email `kenreynolds78@icloud.com` as an admin and leaves all others as regular users. If that user does not exist when the migration runs, it creates no admin. Public signup never grants admin privileges based on email: after creating and verifying the intended account, a database administrator must explicitly set its `users.admin` column to `true`. Existing admins can then manage roles in the application.
 
