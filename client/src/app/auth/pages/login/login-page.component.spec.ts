@@ -22,7 +22,7 @@ describe('LoginPageComponent', () => {
     expect(element.textContent).toContain('Log in to manage your workspace and users.');
     expect(element.querySelector('app-login-form')).toBeTruthy();
     const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('a'));
-    expect(links.map(link => link.getAttribute('href'))).toEqual(['/forgot-password', '/signup']);
+    expect(links.map(link => link.getAttribute('href'))).toEqual(['/forgot-password', '/resend-verification', '/signup']);
   });
 
   it('shows the sign-up notice and lets the user dismiss it', () => {

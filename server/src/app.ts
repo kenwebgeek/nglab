@@ -9,6 +9,7 @@ import { createAuthRouter } from './auth/routes.js';
 import type { SessionsRepository } from './auth/sessions-repository.js';
 import type { PasswordResetRepository } from './auth/password-reset-repository.js';
 import type { PasswordResetMailer } from './auth/password-reset-mailer.js';
+import type { EmailVerification } from './auth/email-verification.js';
 import type { RateLimitOptions } from './rate-limit.js';
 import type { AccountsRepository } from './accounts/repository.js';
 import { createUsersRouter } from './users/routes.js';
@@ -19,12 +20,14 @@ export interface AppDependencies {
   accounts: AccountsRepository;
   sessions: SessionsRepository;
   passwordReset: PasswordResetRepository;
+  emailVerification: EmailVerification;
   passwordResetMailer?: PasswordResetMailer;
   // Defaults to 10 sign-ups per client per 15 minutes
   signupRateLimit?: RateLimitOptions;
   // Failed logins only; defaults to 10 per client per 15 minutes
   loginRateLimit?: RateLimitOptions;
   passwordResetRateLimit?: RateLimitOptions;
+  verificationRateLimit?: RateLimitOptions;
   secureCookies: boolean;
   // Rejects when the database is unreachable
   checkDatabase: () => Promise<void>;
@@ -62,22 +65,24 @@ export function createApp(deps: AppDependencies): Express {
     }
   });
 
-  app.use('/accounts', createAccountsRouter(deps.accounts, deps.signupRateLimit));
+  app.use('/accounts', createAccountsRouter(deps.accounts, deps.emailVerification, deps.signupRateLimit));
   app.use(
     '/auth',
     createAuthRouter({
       accounts: deps.accounts,
       sessions: deps.sessions,
       passwordReset: deps.passwordReset,
+      emailVerification: deps.emailVerification,
       passwordResetMailer: deps.passwordResetMailer,
       loginRateLimit: deps.loginRateLimit,
       passwordResetRateLimit: deps.passwordResetRateLimit,
+      verificationRateLimit: deps.verificationRateLimit,
       secureCookies: deps.secureCookies,
       appUrl: deps.appUrl,
       logger: deps.logger,
     }),
   );
-  app.use('/users', requireAuth(deps.sessions), createUsersRouter(deps.users, deps.secureCookies));
+  app.use('/users', requireAuth(deps.sessions), createUsersRouter(deps.users, deps.secureCookies, deps.emailVerification));
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'not_found', message: 'Route not found' });

@@ -6,6 +6,7 @@ import { createAccountsRepository } from './accounts/repository.js';
 import { createSessionsRepository } from './auth/sessions-repository.js';
 import { createPasswordResetRepository } from './auth/password-reset-repository.js';
 import { createSmtpPasswordResetMailer } from './auth/password-reset-mailer.js';
+import { createEmailVerification, createSmtpVerificationMailer } from './auth/email-verification.js';
 import { createUsersRepository } from './users/repository.js';
 
 const logger = pino({ level: config.logLevel });
@@ -15,6 +16,9 @@ const app = createApp({
   accounts: createAccountsRepository(db),
   sessions: createSessionsRepository(db),
   passwordReset: createPasswordResetRepository(db),
+  emailVerification: createEmailVerification(
+    db, config.smtp ? createSmtpVerificationMailer(config.smtp) : undefined, config.appUrl, logger,
+  ),
   passwordResetMailer: config.smtp ? createSmtpPasswordResetMailer(config.smtp) : undefined,
   secureCookies: config.secureCookies,
   checkDatabase: async () => {
