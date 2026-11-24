@@ -21,7 +21,8 @@ describe('SignupPageComponent', () => {
     expect(element.querySelector('h1')?.textContent).toContain('Create your account');
     expect(element.textContent).toContain('Enter your details to create your account.');
     expect(element.querySelector('app-signup-form')).toBeTruthy();
-    expect(element.querySelector('a')?.getAttribute('href')).toBe('/login');
+    const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('a'));
+    expect(links.map(link => link.getAttribute('href'))).toEqual(['/resend-verification', '/login']);
   });
 
   it('hands the submitted details to the store and clears a stale error on entry', () => {

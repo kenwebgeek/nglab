@@ -11,6 +11,7 @@ import {
   type PasswordResetMailer,
 } from '../src/auth/password-reset-mailer.js';
 import { createPasswordResetRepository } from '../src/auth/password-reset-repository.js';
+import { createEmailVerification, type VerificationEmail, type VerificationMailer } from '../src/auth/email-verification.js';
 import type { RateLimitOptions } from '../src/rate-limit.js';
 import { createUsersRepository } from '../src/users/repository.js';
 import { getTestUrls } from './test-env.js';
@@ -28,6 +29,7 @@ export interface TestServer {
   // Every log line the API wrote, so tests can assert nothing sensitive was logged
   logs: string[];
   passwordResetEmails: PasswordResetEmail[];
+  verificationEmails: VerificationEmail[];
   close: () => Promise<void>;
 }
 
@@ -40,7 +42,11 @@ export interface StartServerOptions {
   sessionTtlMs?: number;
   passwordResetTtlMs?: number;
   passwordResetMailer?: PasswordResetMailer;
+  verificationMailer?: VerificationMailer;
+  verificationRateLimit?: RateLimitOptions;
 }
+
+const verificationEmailsByServer = new Map<string, VerificationEmail[]>();
 
 const testUser = {
   id: 1,
@@ -66,6 +72,7 @@ export async function startServer(
   const logs: string[] = [];
   const logger = pino({ level: 'info' }, { write: (line: string) => void logs.push(line) });
   const passwordResetEmails: PasswordResetEmail[] = [];
+  const verificationEmails: VerificationEmail[] = [];
   const passwordResetMailer = options.passwordResetMailer ?? {
     async sendPasswordReset(email: PasswordResetEmail) {
       passwordResetEmails.push(email);
@@ -77,10 +84,14 @@ export async function startServer(
     accounts: createAccountsRepository(db),
     sessions: options.realAuth ? realSessions : { ...realSessions, findUser: async () => testUser },
     passwordReset: createPasswordResetRepository(db, options.passwordResetTtlMs),
+    emailVerification: createEmailVerification(db, options.verificationMailer ?? {
+      async sendVerification(email) { verificationEmails.push(email); },
+    }, 'http://localhost:4200', logger),
     passwordResetMailer,
     signupRateLimit,
     loginRateLimit: options.loginRateLimit ?? { windowMs: 60_000, limit: 10_000 },
     passwordResetRateLimit: options.passwordResetRateLimit ?? { windowMs: 60_000, limit: 10_000 },
+    verificationRateLimit: options.verificationRateLimit ?? { windowMs: 60_000, limit: 10_000 },
     secureCookies: false,
     checkDatabase: async () => {
       await pool.query('select 1');
@@ -94,12 +105,16 @@ export async function startServer(
     const started = app.listen(0, '127.0.0.1', () => resolve(started));
   });
   const { port } = server.address() as AddressInfo;
+  const baseUrl = `http://127.0.0.1:${port}`;
+  verificationEmailsByServer.set(baseUrl, verificationEmails);
 
   return {
-    baseUrl: `http://127.0.0.1:${port}`,
+    baseUrl,
     logs,
     passwordResetEmails,
+    verificationEmails,
     close: async () => {
+      verificationEmailsByServer.delete(baseUrl);
       await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
       await pool.end();
     },
@@ -134,7 +149,15 @@ export function createAppPool(): pg.Pool {
 
 // Account, session and reset-token rows reference users, so they are cleared together
 export async function resetUsers(admin: pg.Pool): Promise<void> {
-  await admin.query('truncate users, accounts, sessions, password_reset_tokens restart identity');
+  await admin.query('truncate users, accounts, sessions, password_reset_tokens, email_verification_tokens restart identity');
+}
+
+export async function verifySignup(baseUrl: string, email: string): Promise<void> {
+  const sent = verificationEmailsByServer.get(baseUrl)?.findLast((message) => message.to === email);
+  if (!sent) throw new Error('Verification email not captured');
+  const token = new URL(sent.verificationUrl).searchParams.get('token');
+  const response = await call(baseUrl, 'POST', '/auth/email-verification', { token });
+  if (response.status !== 204) throw new Error(`Verification failed with ${response.status}: ${response.text}`);
 }
 
 // Signs up and logs in, returning the Cookie header value for later requests
@@ -146,6 +169,7 @@ export async function signIn(
   if (signup.status !== 201) {
     throw new Error(`Sign-up failed with ${signup.status}: ${signup.text}`);
   }
+  await verifySignup(baseUrl, credentials.email);
   const login = await call(baseUrl, 'POST', '/auth/login', { email: credentials.email, password: credentials.password });
   const cookie = login.headers.getSetCookie()[0]?.split(';')[0];
   if (login.status !== 200 || !cookie) {

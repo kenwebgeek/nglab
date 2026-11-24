@@ -29,24 +29,24 @@ Run all the commands below from the repo root. The root scripts (`npm start`, `n
 2. **Create your secrets.** Neither file is committed.
    - `cp .env.example .env`, then set `POSTGRES_PASSWORD` and `APP_DB_PASSWORD` to generated values, for example `openssl rand -base64 24 | tr -d '/+='`.
    - `cp server/.env.example server/.env`, then replace `<APP_DB_PASSWORD>` and `<POSTGRES_PASSWORD>` in the two connection URLs with the same values.
-   - For password-reset emails, also set `APP_URL`, `SMTP_HOST`, `SMTP_FROM` and, when authentication is required, `SMTP_USER` and `SMTP_PASSWORD` in `server/.env`.
+   - For verification and password-reset emails, set `APP_URL`, `SMTP_HOST`, `SMTP_FROM` and, when authentication is required, `SMTP_USER` and `SMTP_PASSWORD` in `server/.env`. Without SMTP, new accounts cannot receive verification links; configure it before accepting signups.
 3. **Start the database:** `npm run db:up`
 4. **Create the tables:** `npm run db:migrate`
 5. **Load the sample users:** `npm run db:seed` imports the users in `db.json` (add `-- --dry-run` to preview first).
 6. **Start everything:** `npm run dev` starts the database (if it isn't running), the API at `http://localhost:3000` and the app at `http://localhost:4200` together, with colored `[api]` and `[client]` log prefixes. Press Ctrl+C once to stop both. To run them separately, use `npm run api` and `npm start` in two terminals.
 
-### Local password-reset email testing
+### Local email testing
 
-After applying the database migrations, use the optional Mailpit inbox to test password reset without sending real email:
+After applying the database migrations, use the optional Mailpit inbox to test email verification and password reset without sending real email:
 
 1. Start Docker and run `npm run mail:up`. Mailpit listens only on localhost, with SMTP on port 1025 and the web inbox at [http://localhost:8025](http://localhost:8025). It captures messages instead of delivering them to recipients.
 2. In `server/.env`, set `APP_URL=http://localhost:4200`, `SMTP_HOST=127.0.0.1`, `SMTP_PORT=1025`, `SMTP_SECURE=false`, and `SMTP_FROM=NgLab <no-reply@example.test>`. Leave `SMTP_USER` and `SMTP_PASSWORD` unset. Restart the API after changing its configuration. These settings are for local testing only, not production.
-3. Start the app, create an account, and request a password reset for its email address. Open the message in the Mailpit inbox, follow the reset link, choose a new password, and sign in with it.
+3. Start the app and create an account. Open its verification email in Mailpit, follow the link, then sign in. To test password reset, sign out, request a reset, and follow the reset email link to choose a new password.
 4. Run `npm run mail:down` to stop the inbox. `npm run mail:test` runs a local SMTP/inbox smoke test and requires `curl`.
 
-Mailpit is not started by `npm run dev` or the database commands. Messages are temporary and are deleted when Mailpit stops; the inbox contains reset links, so do not expose it or use real production credentials. Reset links expire after one hour, are single-use, and are invalidated when the password changes. When Mailpit is stopped, a reset request still returns the same response for known and unknown accounts; check API logs for delivery errors.
+Mailpit is not started by `npm run dev` or the database commands. Messages are temporary and are deleted when Mailpit stops; the inbox contains sensitive links, so do not expose it or use real production credentials. Verification links expire after 24 hours and are single-use; requesting another invalidates the previous link. New accounts, including credentials created by an admin, must verify their email before signing in. Existing accounts remain verified when the migration is applied. Reset links expire after one hour, are single-use, and are invalidated when the password changes. When Mailpit is stopped, resend and reset requests still return the same response for known and unknown accounts; check API logs for delivery errors and retry from the app.
 
-To run the password-reset API integration test against Mailpit and the throwaway test database, start Mailpit and run:
+To run the verification and password-reset API integration tests against Mailpit and the throwaway test database, start Mailpit and run:
 
 ```sh
 npm run db:test:up

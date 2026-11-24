@@ -39,3 +39,7 @@ export const passwordResetSchema = z.object({
   token: z.string({ error: 'Reset token is required' }).min(1, 'Reset token is required').max(128),
   newPassword: resetPassword,
 });
+
+export const emailVerificationTokenSchema = z.object({
+  token: z.string({ error: 'Verification token is required' }).min(1, 'Verification token is required').max(128),
+});

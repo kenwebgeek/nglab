@@ -3,9 +3,10 @@ import { HttpError } from '../http-error.js';
 import { clearSessionCookie } from '../auth/session-cookie.js';
 import { hashPassword } from '../accounts/password.js';
 import type { UsersRepository } from './repository.js';
+import type { EmailVerification } from '../auth/email-verification.js';
 import { managedUserInputSchema, managedUserUpdateSchema, parseId } from './validation.js';
 
-export function createUsersRouter(users: UsersRepository, secureCookies: boolean): Router {
+export function createUsersRouter(users: UsersRepository, secureCookies: boolean, emailVerification: EmailVerification): Router {
   const router = Router();
 
   router.get('/', async (_req, res) => {
@@ -42,6 +43,9 @@ export function createUsersRouter(users: UsersRepository, secureCookies: boolean
       : await users.updateWithPassword(id, input, await hashPassword(newPassword));
     if (!updated) {
       throw new HttpError(404, 'not_found', 'User not found');
+    }
+    if (newPassword !== undefined) {
+      await emailVerification.send(id);
     }
     res.json(updated);
   });

@@ -41,7 +41,7 @@ describe('AuthStore', () => {
     expect(store.submitting()).toBeFalse();
     expect(store.error()).toBeNull();
     expect(navigate).toHaveBeenCalledWith(['/login']);
-    expect(store.notice()).toBe('Account created. Log in to continue.');
+    expect(store.notice()).toContain('Check your email to verify your address');
   });
 
   it('ignores a second submit while one is in flight', () => {
@@ -116,6 +116,15 @@ describe('AuthStore', () => {
       expect(store.error()).toBe('Incorrect email or password.');
       expect(session.isAuthenticated()).toBeFalse();
       expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('explains that an unverified account needs verification', () => {
+      store.login(login);
+      http.expectOne(loginUrl).flush(
+        { error: 'email_unverified' }, { status: 403, statusText: 'Forbidden' },
+      );
+      expect(store.error()).toContain('Verify your email address');
+      expect(TestBed.inject(SessionStore).isAuthenticated()).toBeFalse();
     });
 
     it('reports throttling and other failures, and ignores a second submit while one is in flight', () => {

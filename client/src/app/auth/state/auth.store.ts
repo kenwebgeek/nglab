@@ -34,7 +34,7 @@ export class AuthStore {
     this.accountsService.createAccount(request).subscribe({
       next: () => {
         this._submitting.set(false);
-        this._notice.set('Account created. Log in to continue.');
+        this._notice.set('Account created. Check your email to verify your address before logging in. If the email does not arrive, request another.');
         this.router.navigate(['/login']);
       },
       error: (error: unknown) => this.fail(this.errorMessage(error, 'Unable to create the account. Please try again.', {
@@ -55,9 +55,13 @@ export class AuthStore {
         this.session.setUser(user);
         this.router.navigate(['/users']);
       },
-      error: (error: unknown) => this.fail(this.errorMessage(error, 'Unable to log in. Please try again.', {
-        401: 'Incorrect email or password.',
-      })),
+      error: (error: unknown) => this.fail(
+        error instanceof HttpErrorResponse && error.status === 403 && error.error?.error === 'email_unverified'
+          ? 'Verify your email address before logging in. Request another verification email if needed.'
+          : this.errorMessage(error, 'Unable to log in. Please try again.', {
+            401: 'Incorrect email or password.',
+          }),
+      ),
     });
   }
 

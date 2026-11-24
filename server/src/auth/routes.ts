@@ -11,11 +11,13 @@ import { clearSessionCookie, readSessionToken, setSessionCookie } from './sessio
 import type { SessionsRepository } from './sessions-repository.js';
 import type { PasswordResetMailer } from './password-reset-mailer.js';
 import type { PasswordResetRepository } from './password-reset-repository.js';
+import type { EmailVerification } from './email-verification.js';
 import {
   changePasswordSchema,
   loginSchema,
   passwordResetRequestSchema,
   passwordResetSchema,
+  emailVerificationTokenSchema,
 } from './validation.js';
 
 export const DEFAULT_LOGIN_RATE_LIMIT: RateLimitOptions = { windowMs: 15 * 60 * 1000, limit: 10 };
@@ -28,9 +30,11 @@ export interface AuthRouterOptions {
   accounts: AccountsRepository;
   sessions: SessionsRepository;
   passwordReset: PasswordResetRepository;
+  emailVerification: EmailVerification;
   passwordResetMailer?: PasswordResetMailer;
   loginRateLimit?: RateLimitOptions;
   passwordResetRateLimit?: RateLimitOptions;
+  verificationRateLimit?: RateLimitOptions;
   secureCookies: boolean;
   appUrl: string;
   logger: Logger;
@@ -40,9 +44,11 @@ export function createAuthRouter({
   accounts,
   sessions,
   passwordReset,
+  emailVerification,
   passwordResetMailer,
   loginRateLimit = DEFAULT_LOGIN_RATE_LIMIT,
   passwordResetRateLimit = DEFAULT_PASSWORD_RESET_RATE_LIMIT,
+  verificationRateLimit = DEFAULT_PASSWORD_RESET_RATE_LIMIT,
   secureCookies,
   appUrl,
   logger,
@@ -63,6 +69,12 @@ export function createAuthRouter({
     legacyHeaders: false,
     message: { error: 'too_many_requests', message: 'Too many reset requests. Please try again later.' },
   });
+  const verificationLimiter = rateLimit({
+    ...verificationRateLimit,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: 'too_many_requests', message: 'Too many verification attempts. Please try again later.' },
+  });
 
   router.post('/login', loginLimiter, async (req, res) => {
     const { email, password } = loginSchema.parse(req.body);
@@ -70,6 +82,9 @@ export function createAuthRouter({
     const passwordMatches = await verifyPassword(password, credentials?.passwordHash ?? (await dummyHash));
     if (!credentials || !passwordMatches) {
       throw new HttpError(401, 'invalid_credentials', 'Incorrect email or password');
+    }
+    if (!credentials.emailVerified) {
+      throw new HttpError(403, 'email_unverified', 'Verify your email address before signing in');
     }
 
     await sessions.purgeExpired();
@@ -87,6 +102,23 @@ export function createAuthRouter({
 
   router.get('/me', requireAuth(sessions), (req, res) => {
     res.json(req.auth!.user);
+  });
+
+  router.post('/email-verification/request', verificationLimiter, async (req, res) => {
+    const { email } = passwordResetRequestSchema.parse(req.body);
+    const credentials = await accounts.findCredentials(email);
+    if (credentials && !credentials.emailVerified) {
+      await emailVerification.send(credentials.user.id);
+    }
+    res.status(204).end();
+  });
+
+  router.post('/email-verification', verificationLimiter, async (req, res) => {
+    const { token } = emailVerificationTokenSchema.parse(req.body);
+    if (!(await emailVerification.verify(token))) {
+      throw new HttpError(400, 'invalid_verification_token', 'The verification link is invalid or has expired');
+    }
+    res.status(204).end();
   });
 
   router.post('/password-reset/request', passwordResetLimiter, async (req, res) => {
